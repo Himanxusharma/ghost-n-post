@@ -1,14 +1,15 @@
 # Product Requirements Document (PRD)
 
 **Product:** Ghost n Post
-**Version:** 1.0 (MVP)
+**Version:** 2.0 (MVP — Single-Deploy Architecture)
 **Status:** Draft
 
 ---
 
 ## 1. Problem Statement
 
-Creators, founders, and marketers publish long-form YouTube content but rarely repurpose it into LinkedIn or X posts, because:
+Creators, founders, and marketers publish long-form YouTube content but
+rarely repurpose it into LinkedIn or X posts, because:
 
 - Manually rewatching and writing takes 30–60+ minutes per video.
 - Generic AI writing tools produce text that doesn't sound like the creator.
@@ -16,22 +17,31 @@ Creators, founders, and marketers publish long-form YouTube content but rarely r
 
 ## 2. Goal
 
-Let a user go from **"YouTube link" to "publish-ready, on-brand social post"** in under 2 minutes, with minimal manual editing.
+Let a user go from **"YouTube link" to "publish-ready, on-brand social
+post"** in under 2 minutes, with minimal manual editing — and ship the
+product itself as simply as possible: one repo, one deploy, on Vercel.
 
 ## 3. Target Users
 
-- **Primary:** Solo creators / founders who post YouTube content and want consistent LinkedIn/X presence without extra effort.
-- **Secondary:** Social media managers/agencies repurposing client video content at scale.
-- **Tertiary:** Marketing teams turning webinars/interviews into social snippets.
+- **Primary:** Solo creators / founders who post YouTube content and want
+  consistent LinkedIn/X presence without extra effort.
+- **Secondary:** Social media managers/agencies repurposing client video
+  content at scale.
+- **Tertiary:** Marketing teams turning webinars/interviews into social
+  snippets.
 
 ## 4. User Stories
 
-- As a creator, I want to paste a YouTube link and get a LinkedIn post draft so I don't have to write it myself.
-- As a creator, I want the generated post to sound like *me*, not like generic AI copy.
-- As a creator, I want the video's thumbnail auto-attached so I don't have to design one.
+- As a creator, I want to paste a YouTube link and get a LinkedIn post
+  draft so I don't have to write it myself.
+- As a creator, I want the generated post to sound like *me*, not like
+  generic AI copy.
+- As a creator, I want the video's thumbnail auto-attached so I don't have
+  to design one.
 - As a creator, I want multiple post variants so I can pick the best hook.
 - As an X user, I want long insights automatically split into a thread.
-- As a returning user, I want my voice/style saved so I don't re-paste examples every time.
+- As a returning user, I want my voice/style saved so I don't re-paste
+  examples every time.
 
 ## 5. Scope
 
@@ -43,6 +53,8 @@ Let a user go from **"YouTube link" to "publish-ready, on-brand social post"** i
 - Style-matching via user-submitted sample posts (few-shot, stored per user)
 - Copy/export generated post
 - Minimal single-page UI (input → output, no dashboard sprawl)
+- Single-repo, single-deploy delivery on Vercel (no separate backend
+  service to host)
 
 ### Out of Scope (MVP — future phases)
 - Direct publishing to LinkedIn/X (API posting)
@@ -63,29 +75,46 @@ Let a user go from **"YouTube link" to "publish-ready, on-brand social post"** i
 
 ## 7. Constraints & Assumptions
 
-- Assumes video has either existing captions or clear spoken audio (not purely music/visual content).
-- Videos are assumed to be under a reasonable length cap for MVP (e.g., 60 min) to control transcription cost/time.
+- Assumes video has either existing captions or clear spoken audio (not
+  purely music/visual content).
+- Videos are assumed to be under a reasonable length cap for MVP (e.g., 60
+  min) to control transcription cost/time.
 - Public videos only (no private/unlisted auth-gated content in MVP).
 - English-first; multilingual support is a future phase.
+- Extraction relies on `youtubei.js` (pure JS) rather than a Python binary
+  like `yt-dlp`, to keep the whole product deployable as a single Node/Next.js
+  app on Vercel. This is a deliberate simplicity-over-maximal-coverage
+  trade-off for MVP — see TRD §7 for edge cases this may not cover.
 
 ## 8. Risks
 
 | Risk | Mitigation |
 |---|---|
-| YouTube ToS / scraping restrictions | Use official YouTube Data API where possible; yt-dlp as fallback with usage monitoring |
-| Transcription cost at scale | Prefer free YouTube captions first; only fall back to paid STT when necessary |
+| YouTube ToS / scraping restrictions | Use official YouTube Data API where possible; `youtubei.js` for caption/metadata access with usage monitoring |
+| Transcription cost at scale | Prefer free YouTube captions first; only fall back to paid STT (Deepgram/AssemblyAI) when necessary |
 | Generic-sounding AI output | Style-profile layer + multiple variants + easy regeneration |
 | Copyright concerns (posting video content) | Only extract/paraphrase, never republish transcript verbatim; thumbnail usage falls under standard embed/preview norms |
+| `youtubei.js` coverage gaps vs. yt-dlp for edge-case videos | Monitor failure rate in production; if material, add a narrow, dedicated extraction fallback rather than reintroducing a full second service |
 
 ## 9. Phased Roadmap
 
-- **Phase 1 (MVP):** Core pipeline — link → transcript → post + thumbnail, style matching via sample posts.
-- **Phase 2:** Direct publishing (LinkedIn/X API), scheduling, carousel/image post generation.
-- **Phase 3:** Chrome extension, batch/channel mode, analytics on post performance.
-- **Phase 4:** Multi-language support, team accounts, custom thumbnail generation.
+- **Phase 1 (MVP):** Core pipeline — link → transcript → post + thumbnail,
+  style matching via sample posts, all shipped as one Vercel-deployed
+  Next.js app with Inngest-orchestrated background jobs.
+- **Phase 2:** Direct publishing (LinkedIn/X API), scheduling,
+  carousel/image post generation.
+- **Phase 3:** Chrome extension, batch/channel mode, analytics on post
+  performance.
+- **Phase 4:** Multi-language support, team accounts, custom thumbnail
+  generation.
 
 ## 10. Open Questions
 
 - Do we support unlisted/private videos in a later phase (requires OAuth)?
 - Pricing model — freemium credits per video vs. flat subscription?
-- Do we store transcripts long-term, or purge after generation for storage/privacy reasons?
+- Do we store transcripts long-term, or purge after generation for
+  storage/privacy reasons?
+- At what job volume would Inngest's free tier need to move to a paid
+  tier, and does that change the "single deploy" simplicity story? (It
+  doesn't add infra to host — just usage-based billing — but worth
+  tracking.)

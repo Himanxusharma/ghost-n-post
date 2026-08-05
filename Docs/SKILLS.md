@@ -9,59 +9,74 @@
 
 | Layer | Technology | Why |
 |---|---|---|
-| Frontend framework | Next.js (React) | Fast SSR landing page, minimal-page architecture fits a lean UI |
+| App framework | Next.js 15 (App Router), TypeScript | Single app for frontend + API — one deploy target on Vercel |
 | Styling | Tailwind CSS | Enforces consistent minimalist design without custom CSS overhead |
-| Backend framework | FastAPI (Python) | Native fit for ML/video tooling (yt-dlp, Whisper) — no cross-language glue |
-| Video/audio extraction | yt-dlp | Most reliable, actively maintained YouTube extraction tool |
-| Transcription (primary) | YouTube captions API / youtube-transcript-api | Free, fast, no compute cost when available |
-| Transcription (fallback) | Whisper API / faster-whisper / Deepgram | Reliable STT when captions don't exist |
-| LLM generation | Claude API | Post drafting, style-profile extraction, structured JSON output |
-| Job queue | Redis + Celery | Async processing for multi-step, multi-second pipeline |
-| Database | PostgreSQL | Relational data: users, posts, jobs, style profiles |
-| Object storage | S3-compatible (AWS S3 / Cloudflare R2 / Backblaze B2) | Thumbnails, transcripts, temp audio |
-| Auth | Supabase Auth / Clerk | Minimal custom auth code for MVP |
-| Hosting (frontend) | Vercel | Native Next.js support |
-| Hosting (backend/workers) | Railway / Render / Fly.io (MVP) → AWS ECS/K8s (scale) | Simple container deploys early, room to scale later |
-| CI/CD | GitHub Actions | Standard lint/test/deploy pipeline |
+| Background jobs | Inngest | Durable, retryable multi-step jobs running as serverless functions — replaces Celery + Redis + workers with zero extra infra to host |
+| Video/caption extraction | youtubei.js | Pure JS/TS, no external binary — runs natively in Vercel serverless functions (yt-dlp does not) |
+| Transcription (primary) | YouTube captions (via youtubei.js) | Free, fast, no compute cost when available |
+| Transcription (fallback) | Deepgram or AssemblyAI (URL-based) | Accepts a remote audio URL directly — no audio download/ffmpeg step needed |
+| LLM generation | Claude API (Anthropic SDK) | Post drafting, style-profile extraction, structured JSON output |
+| Database | Neon Postgres (via Vercel Postgres integration) | Serverless Postgres, scales to zero, connects cleanly from serverless functions |
+| ORM | Drizzle ORM | TypeScript-first, lightweight, serverless-friendly |
+| Object storage | Vercel Blob | Thumbnails + transcripts, native to the deploy platform, no separate S3 account |
+| Auth | Clerk | Drop-in email/OAuth for Next.js, first-class Vercel support |
+| Rate limiting | Upstash Redis + `@upstash/ratelimit` | Serverless, pay-per-request, used only for API rate limiting |
+| Hosting (everything) | Vercel | One project, one deploy, frontend + API + background jobs all included |
+| CI/CD | GitHub Actions + Vercel Git integration | Lint/typecheck/test on PR; deploy on merge is automatic via Vercel |
 | Error monitoring | Sentry | Lightweight, fast to integrate |
+
+**Note:** This is a *single-service* stack by design — there is no separate
+backend to host, no Redis broker to run, no worker container to keep alive.
+Everything ships as one Next.js app on Vercel.
 
 ---
 
 ## 2. Skills Required by Area
 
-### Frontend
-- React / Next.js (SSR, routing, API integration)
+### Full-Stack (Next.js)
+- React / Next.js App Router (Route Handlers, server components, streaming)
+- TypeScript across the whole app (frontend + API + job logic share types)
 - Tailwind CSS, minimalist UI/UX design sensibility
-- State/data fetching with polling or SSE (job status updates)
+- React Query for polling job status
 - Basic accessibility (WCAG contrast, keyboard nav)
 
-### Backend
-- Python, FastAPI (REST API design, async endpoints)
-- Celery + Redis (task queue design, retries, failure handling)
-- Prompt engineering (structured output, style-profile prompting, map-reduce summarization for long transcripts)
-- Working with third-party APIs (Claude API, Whisper/Deepgram, YouTube)
+### Background Job Orchestration
+- Inngest (or comparable: Trigger.dev, Upstash Workflow) — designing
+  multi-step durable functions, retries, and fan-out
+- No Celery/Redis broker administration knowledge needed — this is the
+  main skill swap from the original stack
 
-### Video/Audio Processing
-- yt-dlp usage and edge-case handling (age-restricted, region-locked, private videos)
-- Audio extraction/formatting for STT input
+### Video/Content Processing
+- `youtubei.js` usage and edge-case handling (age-restricted, region-locked,
+  private videos)
 - Understanding of caption/subtitle formats (VTT/SRT parsing)
+- Working with URL-based STT APIs (Deepgram/AssemblyAI) instead of local
+  audio extraction
+
+### LLM / Prompt Engineering
+- Anthropic Claude API (Node SDK), structured output prompting
+- Style-profile prompting (translating writing samples into a reusable
+  style spec)
+- Map-reduce summarization strategy for long transcripts
+- JSON validation (e.g., Zod) for structured model output
 
 ### Data & Infra
-- PostgreSQL schema design (users, jobs, posts, style_profiles)
-- S3-compatible storage (signed URLs, lifecycle/retention policies)
-- Docker containerization
-- CI/CD pipeline setup (GitHub Actions)
-- Basic DevOps for Railway/Render/Fly.io or AWS
+- Postgres schema design with Drizzle ORM (users, jobs, posts, style_profiles)
+- Vercel Blob (signed URLs, retention/cleanup logic)
+- Vercel project configuration (env vars, integrations: Neon, Blob, Inngest)
+- GitHub Actions for CI (lint/typecheck/test) — deploy itself is handled by
+  Vercel's Git integration, no custom deploy scripting required
 
 ### Product/Design
 - Minimalist UI/UX design — restraint is a skill here, not just aesthetics
-- Prompt design for "voice matching" (translating writing samples into a usable style spec)
+- Prompt design for "voice matching"
 - Understanding platform norms (LinkedIn vs X post structure, thread conventions)
 
 ### Legal/Compliance (lightweight, but relevant)
-- Awareness of YouTube ToS regarding scraping/download tools
-- Basic copyright understanding (paraphrasing vs reproducing transcript/thumbnail usage)
-- Data retention/privacy basics (transcript storage, user data deletion)
+- Awareness of YouTube ToS regarding caption/metadata extraction
+- Basic copyright understanding (paraphrasing vs reproducing transcript;
+  thumbnail usage under standard embed/preview norms)
+- Data retention/privacy basics (transcript storage window, user data deletion)
 
 ---
 
@@ -69,22 +84,27 @@
 
 | Role | Needed for |
 |---|---|
-| Full-stack engineer (Python + React) | Can single-handedly build MVP given this stack |
-| (Optional) ML/prompt engineer | Optimizing style-matching accuracy and cost at scale |
+| Full-stack engineer (TypeScript/Next.js) | Can single-handedly build and deploy the entire MVP — one language, one repo, one deploy target |
+| (Optional) ML/prompt engineer | Optimizing style-matching accuracy and generation cost at scale |
 | (Optional) Product designer | Refining the minimalist UI beyond MVP wireframe level |
-| (Optional) DevOps | Only needed once scaling past MVP infra (Railway/Render → AWS) |
 
-For a solo builder or small team, one full-stack engineer comfortable with Python + React can ship the MVP end-to-end using this stack.
+A solo builder comfortable with TypeScript/Next.js can now ship the *entire*
+product — frontend, API, background jobs, and deployment — without touching
+Python, Docker, or a second hosting provider. This is a meaningfully smaller
+skill surface than the original two-language, two-deploy-target stack.
 
 ---
 
 ## 4. Suggested Build Order (skills applied in sequence)
 
-1. yt-dlp integration + thumbnail fetch (fastest visible win, no LLM needed yet)
-2. Caption extraction pipeline (free transcript path)
-3. Whisper/Deepgram fallback integration
-4. Claude API prompt design for post generation (LinkedIn + X)
-5. Style-profile extraction + injection
-6. Job queue wiring (Celery + Redis) for async UX
-7. Minimalist frontend wired to polling job status
-8. Auth + history + style-profile persistence
+1. Next.js app scaffold + minimalist input UI (fastest visible win)
+2. `youtubei.js` metadata + thumbnail fetch → Vercel Blob upload
+3. Caption extraction pipeline (free transcript path)
+4. Deepgram/AssemblyAI URL-based fallback integration
+5. Claude API prompt design for post generation (LinkedIn + X)
+6. Wire the pipeline into Inngest as durable steps, with job-status writes
+   to Postgres
+7. Frontend polling (React Query) against `/api/jobs/{id}`
+8. Style-profile extraction + injection
+9. Clerk auth + history + style-profile persistence
+10. Deploy to Vercel (single project) + connect Neon/Blob/Inngest integrations
