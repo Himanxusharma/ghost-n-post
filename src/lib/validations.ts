@@ -1,6 +1,9 @@
 import { z } from "zod";
 import { extractYoutubeId } from "@/lib/youtube-id";
 
+export const socialPlatformSchema = z.enum(["linkedin", "x"]);
+export type SocialPlatform = z.infer<typeof socialPlatformSchema>;
+
 export const generateRequestSchema = z.object({
   youtubeUrl: z
     .string()
@@ -11,6 +14,12 @@ export const generateRequestSchema = z.object({
       message: "Enter a valid YouTube video URL",
     }),
   applyStyle: z.boolean().optional().default(true),
+  platforms: z
+    .array(socialPlatformSchema)
+    .min(1, "Select at least one platform")
+    .max(2)
+    .optional()
+    .default(["linkedin", "x"]),
   language: z
     .enum([
       "auto",

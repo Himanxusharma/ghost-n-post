@@ -7,8 +7,10 @@ import { useEffect, useState } from "react";
 import { JobProgress } from "./job-progress";
 import { PostResult } from "./post-result";
 import { SiteHeader } from "./site-header";
+import { ResultPanelSkeleton } from "./ui-skeleton";
 import { UrlForm } from "./url-form";
 import type { SupportedLanguage } from "@/lib/content";
+import type { SocialPlatform } from "@/lib/validations";
 import { extractYoutubeId } from "@/lib/youtube-id";
 
 const StyleSettingsModal = dynamic(
@@ -44,6 +46,7 @@ type PostResponse = {
     linkedinDraft: string;
     xDraft: string;
     xThread: string[];
+    platforms?: SocialPlatform[];
     regenerateCount: number;
     carouselSlides?: Array<{
       headline: string;
@@ -84,6 +87,7 @@ export function HomeWorkspace() {
     youtubeUrl: string,
     applyStyle: boolean,
     language: SupportedLanguage = "auto",
+    platforms: SocialPlatform[] = ["linkedin", "x"],
   ) {
     setSubmitError(null);
     setFormBusy(true);
@@ -92,7 +96,7 @@ export function HomeWorkspace() {
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ youtubeUrl, applyStyle, language }),
+        body: JSON.stringify({ youtubeUrl, applyStyle, language, platforms }),
       });
       const json = await response.json();
       if (!json.success) {
@@ -126,26 +130,33 @@ export function HomeWorkspace() {
     <div className="page-shell">
       <SiteHeader onOpenStyle={() => setStyleOpen(true)} />
 
-      <main id="main-content" className="hero" tabIndex={-1}>
+      <main
+        id="main-content"
+        className={`hero${activeJobId ? " has-results" : ""}`}
+        tabIndex={-1}
+      >
         <div className="hero-atmosphere" aria-hidden />
 
         <div className="hero-content">
-          <p className="brand animate-fade">Ghost n Post</p>
-          <h1 className="headline animate-fade delay-1">
-            Your AI ghostwriter for video.
+          <div className="catalog-meta animate-fade" aria-hidden>
+            <span className="catalog-meta-id">REC.0001 // MEDIA-INDEX</span>
+            <span className="catalog-meta-stamp">Draft studio</span>
+          </div>
+          <p className="brand animate-fade delay-1">Ghost n Post</p>
+          <h1 className="headline animate-fade delay-2">
+            Turn any YouTube video into LinkedIn and X drafts.
           </h1>
-          <p className="subhead animate-fade delay-2">
-            Paste a YouTube link. Get a LinkedIn and X draft in your voice —
-            with the thumbnail ready to go.
+          <p className="subhead animate-fade delay-3">
+            Paste a link. Get on-brand posts in your voice — ready to edit and publish.
           </p>
 
-          <div className="hero-input animate-fade delay-3">
+          <div className="hero-input animate-fade delay-4">
             <UrlForm
               key={deepLinkUrl || "url-form"}
               initialUrl={deepLinkUrl}
-              onSubmitUrl={async (youtubeUrl, applyStyle, language) => {
+              onSubmitUrl={async (youtubeUrl, applyStyle, language, platforms) => {
                 try {
-                  await onSubmitUrl(youtubeUrl, applyStyle, language);
+                  await onSubmitUrl(youtubeUrl, applyStyle, language, platforms);
                 } catch (error) {
                   setSubmitError(
                     error instanceof Error
@@ -271,10 +282,7 @@ function ActiveJobPanel({
 
       {postQuery.isLoading ? (
         <div className="workspace" aria-busy="true">
-          <div className="progress-panel">
-            <span className="skeleton-line" aria-hidden />
-            <p className="hint">Loading drafts…</p>
-          </div>
+          <ResultPanelSkeleton />
         </div>
       ) : null}
 
@@ -300,6 +308,7 @@ function ActiveJobPanel({
             linkedinDraft={postQuery.data.linkedinDraft}
             xDraft={postQuery.data.xDraft}
             xThread={postQuery.data.xThread}
+            platforms={postQuery.data.platforms ?? ["linkedin", "x"]}
             regenerateCount={postQuery.data.regenerateCount}
             carouselSlides={postQuery.data.carouselSlides ?? []}
             thumbnailUrl={postQuery.data.video?.thumbnailUrl}

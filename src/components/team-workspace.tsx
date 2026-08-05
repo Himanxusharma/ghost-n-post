@@ -1,11 +1,12 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { PageHeader } from "@/components/page-header";
 import { SiteHeader } from "@/components/site-header";
 import { StyleSettingsModal } from "@/components/style-settings-modal";
+import { ListSkeleton } from "@/components/ui-skeleton";
 import { LANGUAGE_LABELS, SUPPORTED_LANGUAGES } from "@/lib/content";
 
 type TeamRow = {
@@ -198,16 +199,16 @@ export function TeamWorkspace() {
     <div className="page-shell">
       <SiteHeader onOpenStyle={() => setStyleOpen(true)} />
       <main id="main-content" className="history-page" tabIndex={-1}>
-        <header className="history-header">
-          <p className="brand-sm">Ghost n Post</p>
-          <h1>Team</h1>
-          <p>Shared workspace for drafts, invites, and default language.</p>
-          <Link href="/" className="text-link">
-            ← Back to drafts
-          </Link>
-        </header>
+        <div className="page-panel">
+          <PageHeader
+            stamp="Team"
+            title="Team"
+            description="Shared workspace for drafts, invites, and default language."
+            backHref="/"
+            backLabel="← Back to drafts"
+          />
 
-        {inviteToken ? (
+          {inviteToken ? (
           <p className="hint">
             {acceptInvite.isPending
               ? "Accepting invite…"
@@ -249,7 +250,9 @@ export function TeamWorkspace() {
 
         <section className="team-section">
           <h2>Your teams</h2>
-          {teamsQuery.isLoading ? <p className="hint">Loading teams…</p> : null}
+          {teamsQuery.isLoading ? (
+            <ListSkeleton rows={3} withThumb={false} />
+          ) : null}
           {teamsQuery.isError ? (
             <p className="field-error" role="alert">
               {(teamsQuery.error as Error).message}
@@ -377,6 +380,7 @@ export function TeamWorkspace() {
         ) : null}
 
         {status ? <p className="hint">{status}</p> : null}
+        </div>
       </main>
 
       {styleOpen ? (

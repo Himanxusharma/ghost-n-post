@@ -65,6 +65,7 @@ export async function GET(
         linkedinDraft: post.linkedinDraft,
         xDraft: post.xDraft,
         xThread: post.xThread,
+        platforms: post.platforms ?? ["linkedin", "x"],
         regenerateCount: post.regenerateCount,
         carouselSlides: post.carouselSlides,
         carouselGeneratedAt: post.carouselGeneratedAt,

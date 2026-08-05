@@ -4,9 +4,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { PageHeader } from "@/components/page-header";
 import { SiteHeader } from "@/components/site-header";
 import { StyleSettingsModal } from "@/components/style-settings-modal";
 import { ThumbImage } from "@/components/thumb-image";
+import { ListSkeleton } from "@/components/ui-skeleton";
 import {
   LANGUAGE_LABELS,
   SUPPORTED_LANGUAGES,
@@ -184,16 +186,16 @@ export function BatchWorkspace() {
     <div className="page-shell">
       <SiteHeader onOpenStyle={() => setStyleOpen(true)} />
       <main id="main-content" className="history-page" tabIndex={-1}>
-        <header className="history-header">
-          <p className="brand-sm">Ghost n Post</p>
-          <h1>Batch & channel</h1>
-          <p>Process multiple videos or a whole channel feed.</p>
-          <Link href="/" className="text-link">
-            ← Single video
-          </Link>
-        </header>
+        <div className="page-panel">
+          <PageHeader
+            stamp="Batch"
+            title="Batch & channel"
+            description="Process multiple videos or a whole channel feed."
+            backHref="/"
+            backLabel="← Single video"
+          />
 
-        <form className="batch-form" onSubmit={onSubmit} noValidate>
+          <form className="batch-form" onSubmit={onSubmit} noValidate>
           <div className="platform-toggle" role="group" aria-label="Batch mode">
             <button
               type="button"
@@ -238,7 +240,7 @@ export function BatchWorkspace() {
             </label>
           )}
 
-          <label className="style-toggle">
+          <label>
             Max videos
             <input
               type="number"
@@ -249,7 +251,7 @@ export function BatchWorkspace() {
             />
           </label>
 
-          <label className="language-select">
+          <label>
             Language
             <select
               value={language}
@@ -286,7 +288,7 @@ export function BatchWorkspace() {
                 Close
               </button>
             </header>
-            {detailQuery.isLoading ? <p className="hint">Loading batch…</p> : null}
+            {detailQuery.isLoading ? <ListSkeleton rows={3} /> : null}
             {detailQuery.isError ? (
               <p className="field-error" role="alert">
                 {(detailQuery.error as Error).message}
@@ -359,43 +361,41 @@ export function BatchWorkspace() {
 
         <section className="team-section">
           <h2>Recent batches</h2>
-          {listQuery.isLoading ? (
-            <p className="hint" aria-busy="true">
-              <span className="skeleton-line" aria-hidden />
-              <span className="sr-only">Loading…</span>
-            </p>
-          ) : null}
+          {listQuery.isLoading ? <ListSkeleton rows={3} /> : null}
           {listQuery.isError ? (
             <p className="field-error" role="alert">
               {(listQuery.error as Error).message}
             </p>
           ) : null}
-          <ul className="history-list">
-            {(listQuery.data ?? []).map((batch) => (
-              <li key={batch.id} className="publication-row">
-                <div className="thumb-placeholder platform-badge">
-                  {batch.type === "channel" ? "ch" : "list"}
-                </div>
-                <div className="history-meta">
-                  <h2>
-                    {batch.channelTitle || batch.type} · {batch.status}
-                  </h2>
-                  <p>{batch.stageLabel}</p>
-                  <p className="hint">
-                    {batch.completedCount}/{batch.totalCount} complete
-                    {batch.failedCount ? ` · ${batch.failedCount} failed` : ""}
-                  </p>
-                  <Link href={`/batch?id=${batch.id}`} className="text-link">
-                    Details
-                  </Link>
-                </div>
-              </li>
-            ))}
-          </ul>
-          {listQuery.data?.length === 0 ? (
+          {!listQuery.isLoading ? (
+            <ul className="history-list">
+              {(listQuery.data ?? []).map((batch) => (
+                <li key={batch.id} className="publication-row">
+                  <div className="thumb-placeholder platform-badge">
+                    {batch.type === "channel" ? "ch" : "list"}
+                  </div>
+                  <div className="history-meta">
+                    <h2>
+                      {batch.channelTitle || batch.type} · {batch.status}
+                    </h2>
+                    <p>{batch.stageLabel}</p>
+                    <p className="hint">
+                      {batch.completedCount}/{batch.totalCount} complete
+                      {batch.failedCount ? ` · ${batch.failedCount} failed` : ""}
+                    </p>
+                    <Link href={`/batch?id=${batch.id}`} className="text-link">
+                      Details
+                    </Link>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          {!listQuery.isLoading && listQuery.data?.length === 0 ? (
             <p className="hint">No batches yet. Start one above.</p>
           ) : null}
         </section>
+        </div>
       </main>
       {styleOpen ? (
         <StyleSettingsModal

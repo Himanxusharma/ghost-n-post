@@ -1,10 +1,11 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import Link from "next/link";
+import { PageHeader } from "@/components/page-header";
 import { SiteHeader } from "@/components/site-header";
 import { StyleSettingsModal } from "@/components/style-settings-modal";
 import { ThumbImage } from "@/components/thumb-image";
+import { ListSkeleton } from "@/components/ui-skeleton";
 import { useState } from "react";
 
 type HistoryItem = {
@@ -48,61 +49,66 @@ export default function HistoryPage() {
       <SiteHeader onOpenStyle={() => setStyleOpen(true)} />
 
       <main id="main-content" className="history-page" tabIndex={-1}>
-        <header className="history-header">
-          <p className="brand-sm">Ghost n Post</p>
-          <h1>History</h1>
-          <p>Past generations, newest first.</p>
-          <Link href="/" className="text-link">
-            ← New draft
-          </Link>
-        </header>
+        <div className="page-panel">
+          <PageHeader
+            stamp="History"
+            title="History"
+            description="Past generations, newest first."
+            backHref="/"
+            backLabel="← New draft"
+          />
 
-        {historyQuery.isLoading ? <p className="hint">Loading…</p> : null}
-        {historyQuery.isError ? (
-          <p className="field-error">
-            {(historyQuery.error as Error).message}
-          </p>
-        ) : null}
+          {historyQuery.isLoading ? <ListSkeleton rows={4} /> : null}
+          {historyQuery.isError ? (
+            <p className="field-error">
+              {(historyQuery.error as Error).message}
+            </p>
+          ) : null}
 
-        <ul className="history-list">
-          {(historyQuery.data ?? []).map((item) => (
-            <li key={item.id}>
-              {item.thumbnailUrl ? (
-                <ThumbImage
-                  src={item.thumbnailUrl}
-                  alt={
-                    item.videoTitle
-                      ? `Thumbnail for ${item.videoTitle}`
-                      : "Saved draft thumbnail"
-                  }
-                  width={120}
-                  height={68}
-                  sizes="120px"
-                />
-              ) : (
-                <div className="thumb-placeholder" aria-hidden />
-              )}
-              <div className="history-meta">
-                <h2>{item.videoTitle ?? "Untitled video"}</h2>
-                <p>{item.snippet}…</p>
-                <time dateTime={item.createdAt}>
-                  {new Date(item.createdAt).toLocaleString()}
-                </time>
-              </div>
-              <button
-                type="button"
-                className="btn-quiet"
-                onClick={() => deleteMutation.mutate(item.id)}
-              >
-                Delete
-              </button>
-            </li>
-          ))}
-        </ul>
+          {!historyQuery.isLoading ? (
+            <ul className="history-list">
+              {(historyQuery.data ?? []).map((item) => (
+                <li key={item.id}>
+                  {item.thumbnailUrl ? (
+                    <ThumbImage
+                      src={item.thumbnailUrl}
+                      alt={
+                        item.videoTitle
+                          ? `Thumbnail for ${item.videoTitle}`
+                          : "Saved draft thumbnail"
+                      }
+                      width={120}
+                      height={68}
+                      sizes="120px"
+                    />
+                  ) : (
+                    <div className="thumb-placeholder" aria-hidden />
+                  )}
+                  <div className="history-meta">
+                    <h2>{item.videoTitle ?? "Untitled video"}</h2>
+                    <p>{item.snippet}…</p>
+                    <time dateTime={item.createdAt}>
+                      {new Date(item.createdAt).toLocaleString()}
+                    </time>
+                  </div>
+                  <button
+                    type="button"
+                    className="btn-quiet"
+                    onClick={() => deleteMutation.mutate(item.id)}
+                  >
+                    Delete
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : null}
 
-        {historyQuery.data?.length === 0 ? (
-          <p className="hint">No saved drafts yet. Generate one from the home page.</p>
-        ) : null}
+          {!historyQuery.isLoading && historyQuery.data?.length === 0 ? (
+            <p className="hint">
+              No saved drafts yet. Generate one from the home page.
+            </p>
+          ) : null}
+        </div>
       </main>
 
       {styleOpen ? (

@@ -109,6 +109,11 @@ export const jobs = pgTable("jobs", {
   applyStyle: boolean("apply_style").default(true).notNull(),
   /** Output language for drafts; `auto` detects from transcript. */
   language: varchar("language", { length: 8 }).default("auto").notNull(),
+  /** Which platforms to generate drafts for. */
+  platforms: jsonb("platforms")
+    .$type<Array<"linkedin" | "x">>()
+    .default(["linkedin", "x"])
+    .notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
@@ -130,6 +135,11 @@ export const posts = pgTable("posts", {
   linkedinDraft: text("linkedin_draft").notNull(),
   xDraft: text("x_draft").notNull(),
   xThread: jsonb("x_thread").$type<string[]>().default([]).notNull(),
+  /** Platforms this post was generated for. */
+  platforms: jsonb("platforms")
+    .$type<Array<"linkedin" | "x">>()
+    .default(["linkedin", "x"])
+    .notNull(),
   regenerateCount: integer("regenerate_count").default(0).notNull(),
   language: varchar("language", { length: 8 }).default("en").notNull(),
   /** Phase 2: generated quote-card / carousel slides */

@@ -33,6 +33,10 @@ export function SiteHeader({ onOpenStyle }: SiteHeaderProps) {
 
   return (
     <header className={`site-header${menuOpen ? " is-open" : ""}`}>
+      <Link href="/" className="nav-brand" onClick={closeMenu}>
+        Ghost n Post
+      </Link>
+
       <button
         ref={toggleRef}
         type="button"
@@ -130,7 +134,7 @@ export function SiteHeader({ onOpenStyle }: SiteHeaderProps) {
             {isLoaded ? (
               <div className="nav-auth">
                 <Link href="/sign-in" className="nav-cta" onClick={closeMenu}>
-                  Continue with Google
+                  Sign in
                 </Link>
               </div>
             ) : (

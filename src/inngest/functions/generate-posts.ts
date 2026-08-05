@@ -25,18 +25,21 @@ export const generateVideoPosts = inngest.createFunction(
     retries: 2,
   },
   async ({ event, step }) => {
-    const { jobId, youtubeUrl, userId, applyStyle, language, teamId } =
+    const { jobId, youtubeUrl, userId, applyStyle, language, teamId, platforms } =
       event.data as {
         jobId: string;
         youtubeUrl: string;
         userId: string | null;
         applyStyle: boolean;
         language?: string;
+        platforms?: Array<"linkedin" | "x">;
         teamId?: string | null;
         batchId?: string;
       };
 
     const requestedLanguage = language || "auto";
+    const selectedPlatforms =
+      platforms && platforms.length > 0 ? platforms : (["linkedin", "x"] as const);
 
     try {
       const metadata = await step.run("fetch-metadata", async () => {
@@ -172,9 +175,10 @@ export const generateVideoPosts = inngest.createFunction(
           transcript: transcript.text,
           styleProfile,
           language: outputLanguage,
+          platforms: [...selectedPlatforms],
         });
 
-        return { ...drafts, outputLanguage };
+        return { ...drafts, outputLanguage, platforms: [...selectedPlatforms] };
       });
 
       const postId = await step.run("persist-result", async () => {
@@ -189,6 +193,7 @@ export const generateVideoPosts = inngest.createFunction(
             linkedinDraft: generated.linkedin,
             xDraft: generated.x,
             xThread: generated.xThread,
+            platforms: generated.platforms,
             language: generated.outputLanguage,
           })
           .returning({ id: posts.id });

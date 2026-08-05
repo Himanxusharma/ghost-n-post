@@ -1,9 +1,10 @@
 import { z } from "zod";
 import { completeJson, completeText } from "@/lib/llm";
+import type { SocialPlatform } from "@/lib/validations";
 
 const generatedPostsSchema = z.object({
-  linkedin: z.string().min(1),
-  x: z.string().min(1),
+  linkedin: z.string().default(""),
+  x: z.string().default(""),
   xThread: z.array(z.string()).default([]),
 });
 
@@ -27,7 +28,7 @@ export function prepareTranscriptForPrompt(transcript: string): string {
 }
 
 /**
- * Generate LinkedIn + X drafts from video context (title, channel, transcript, style).
+ * Generate LinkedIn and/or X drafts from video context.
  * Uses Groq (`GROQ_API_KEY`) with the transcript as primary context.
  */
 export async function generateSocialPosts(input: {
@@ -36,11 +37,49 @@ export async function generateSocialPosts(input: {
   transcript: string;
   styleProfile?: string | null;
   language?: string;
+  platforms?: SocialPlatform[];
 }): Promise<GeneratedPosts> {
   const style = input.styleProfile?.trim() || DEFAULT_STYLE;
   const transcript = prepareTranscriptForPrompt(input.transcript);
   const language =
     input.language && input.language !== "auto" ? input.language : "en";
+  const platforms = normalizePlatforms(input.platforms);
+  const wantLinkedIn = platforms.includes("linkedin");
+  const wantX = platforms.includes("x");
+
+  const shapeLines: string[] = [];
+  if (wantLinkedIn) {
+    shapeLines.push(
+      `"linkedin": "long-form LinkedIn post with a strong hook, body paragraphs, and a closing line"`,
+    );
+  } else {
+    shapeLines.push(`"linkedin": ""`);
+  }
+  if (wantX) {
+    shapeLines.push(
+      `"x": "a single X/Twitter post under ${X_CHAR_LIMIT} characters"`,
+      `"xThread": ["numbered thread parts ONLY if the insight needs more than one X post; otherwise []"]`,
+    );
+  } else {
+    shapeLines.push(`"x": ""`, `"xThread": []`);
+  }
+
+  const rules: string[] = [];
+  if (wantLinkedIn) {
+    rules.push(
+      "- LinkedIn: structured, scannable, no emoji overload, no hashtag walls.",
+    );
+  }
+  if (wantX) {
+    rules.push(
+      `- X: punchy; if content exceeds one post, put the full thread in xThread (1/, 2/, …) and put tweet 1 in "x".`,
+    );
+  }
+  rules.push("- Stay faithful to the video's ideas without inventing facts.");
+  rules.push(`- Entire output must be in ${language}.`);
+  rules.push(
+    `- Only fill platforms requested: ${platforms.join(" + ")}. Leave others as empty string / [].`,
+  );
 
   const parsed = await completeJson(
     `You are a social ghostwriter. Paraphrase insights from the video — never copy the transcript verbatim.
@@ -48,6 +87,7 @@ export async function generateSocialPosts(input: {
 Video title: ${input.title}
 Channel: ${input.channelName}
 Output language: ${language} (write ALL drafts in this language)
+Platforms to write for: ${platforms.join(", ")}
 
 Writing style to match:
 ${style}
@@ -59,28 +99,39 @@ ${transcript}
 
 Return JSON with this shape:
 {
-  "linkedin": "long-form LinkedIn post with a strong hook, body paragraphs, and a closing line",
-  "x": "a single X/Twitter post under ${X_CHAR_LIMIT} characters",
-  "xThread": ["numbered thread parts ONLY if the insight needs more than one X post; otherwise []"]
+  ${shapeLines.join(",\n  ")}
 }
 
 Rules:
-- LinkedIn: structured, scannable, no emoji overload, no hashtag walls.
-- X: punchy; if content exceeds one post, put the full thread in xThread (1/, 2/, …) and put tweet 1 in "x".
-- Stay faithful to the video's ideas without inventing facts.
-- Entire output must be in ${language}.`,
+${rules.join("\n")}`,
     4096,
   );
 
   const result = generatedPostsSchema.parse(parsed);
 
-  // Ensure single-tweet fits; otherwise force a thread from the long draft.
-  if (result.x.length > X_CHAR_LIMIT && result.xThread.length === 0) {
+  if (!wantLinkedIn) {
+    result.linkedin = "";
+  }
+  if (!wantX) {
+    result.x = "";
+    result.xThread = [];
+  } else if (result.x.length > X_CHAR_LIMIT && result.xThread.length === 0) {
+    // Ensure single-tweet fits; otherwise force a thread from the long draft.
     result.xThread = splitIntoThread(result.x);
     result.x = result.xThread[0] ?? result.x.slice(0, X_CHAR_LIMIT - 1);
   }
 
   return result;
+}
+
+export function normalizePlatforms(
+  platforms?: SocialPlatform[] | null,
+): SocialPlatform[] {
+  const unique = [...new Set(platforms ?? ["linkedin", "x"])].filter(
+    (platform): platform is SocialPlatform =>
+      platform === "linkedin" || platform === "x",
+  );
+  return unique.length > 0 ? unique : ["linkedin", "x"];
 }
 
 export async function extractStyleProfile(samples: string[]): Promise<string> {

@@ -14,6 +14,7 @@ type PublishPanelProps = {
   xThread: string[];
   carouselSlides: CarouselSlide[];
   customThumbnailUrl?: string | null;
+  platforms?: Array<"linkedin" | "x">;
   onCarouselGenerated: (slides: CarouselSlide[]) => void;
 };
 
@@ -30,10 +31,16 @@ export function PublishPanel({
   xThread,
   carouselSlides,
   customThumbnailUrl = null,
+  platforms = ["linkedin", "x"],
   onCarouselGenerated,
 }: PublishPanelProps) {
   const { isSignedIn } = useAuth();
-  const [platform, setPlatform] = useState<"linkedin" | "x">("linkedin");
+  const availablePlatforms = platforms.length
+    ? platforms
+    : (["linkedin", "x"] as const);
+  const [platform, setPlatform] = useState<"linkedin" | "x">(
+    availablePlatforms.includes("linkedin") ? "linkedin" : "x",
+  );
   const [includeCarousel, setIncludeCarousel] = useState(false);
   const [includeCustomThumbnail, setIncludeCustomThumbnail] = useState(false);
   const [scheduleMode, setScheduleMode] = useState(false);
@@ -152,22 +159,26 @@ export function PublishPanel({
       </header>
 
       <div className="platform-toggle" role="group" aria-label="Platform">
-        <button
-          type="button"
-          className={platform === "linkedin" ? "active" : ""}
-          aria-pressed={platform === "linkedin"}
-          onClick={() => setPlatform("linkedin")}
-        >
-          LinkedIn
-        </button>
-        <button
-          type="button"
-          className={platform === "x" ? "active" : ""}
-          aria-pressed={platform === "x"}
-          onClick={() => setPlatform("x")}
-        >
-          X
-        </button>
+        {availablePlatforms.includes("linkedin") ? (
+          <button
+            type="button"
+            className={platform === "linkedin" ? "active" : ""}
+            aria-pressed={platform === "linkedin"}
+            onClick={() => setPlatform("linkedin")}
+          >
+            LinkedIn
+          </button>
+        ) : null}
+        {availablePlatforms.includes("x") ? (
+          <button
+            type="button"
+            className={platform === "x" ? "active" : ""}
+            aria-pressed={platform === "x"}
+            onClick={() => setPlatform("x")}
+          >
+            X
+          </button>
+        ) : null}
       </div>
 
       {!connected ? (

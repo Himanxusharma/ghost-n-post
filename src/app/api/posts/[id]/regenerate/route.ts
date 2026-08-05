@@ -123,6 +123,7 @@ export async function POST(
       transcript,
       styleProfile,
       language: post.language,
+      platforms: post.platforms ?? ["linkedin", "x"],
     });
 
     const [updated] = await db
@@ -143,6 +144,7 @@ export async function POST(
         linkedinDraft: updated.linkedinDraft,
         xDraft: updated.xDraft,
         xThread: updated.xThread,
+        platforms: updated.platforms ?? ["linkedin", "x"],
         regenerateCount: updated.regenerateCount,
       },
     });

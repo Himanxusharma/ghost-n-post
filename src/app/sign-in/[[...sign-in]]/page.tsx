@@ -12,12 +12,18 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
 
   return (
     <main id="main-content" className="auth-page" tabIndex={-1}>
-      <div className="auth-shell">
+      <div className="auth-shell page-panel">
         <header className="auth-brand">
+          <div className="catalog-meta" aria-hidden>
+            <span className="catalog-meta-id">REC // ACCESS</span>
+            <span className="catalog-meta-stamp">Sign in</span>
+          </div>
           <Link href="/" className="brand-sm">
             Ghost n Post
           </Link>
-          <p>Sign in with Google to save drafts, match your voice, and publish.</p>
+          <p>
+            Sign in with Google to save drafts, match your voice, and publish.
+          </p>
           {params.error === "oauth_session" ? (
             <p className="field-error" role="alert">
               Please sign in with Google again to finish connecting your social

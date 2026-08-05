@@ -34,7 +34,7 @@ export function ThumbImage({
         alt={alt}
         width={width}
         height={height}
-        className={className}
+        className={["thumb-image", className].filter(Boolean).join(" ")}
         loading={priority ? "eager" : "lazy"}
         decoding="async"
         fetchPriority={priority ? "high" : "low"}
@@ -48,7 +48,7 @@ export function ThumbImage({
       alt={alt}
       width={width}
       height={height}
-      className={className}
+      className={["thumb-image", className].filter(Boolean).join(" ")}
       sizes={sizes ?? `${width}px`}
       priority={priority}
       loading={priority ? undefined : "lazy"}

@@ -16,12 +16,18 @@ export default async function SignUpPage({ searchParams }: SignUpPageProps) {
 
   return (
     <main id="main-content" className="auth-page" tabIndex={-1}>
-      <div className="auth-shell">
+      <div className="auth-shell page-panel">
         <header className="auth-brand">
+          <div className="catalog-meta" aria-hidden>
+            <span className="catalog-meta-id">REC // ACCESS</span>
+            <span className="catalog-meta-stamp">Sign up</span>
+          </div>
           <Link href="/" className="brand-sm">
             Ghost n Post
           </Link>
-          <p>Create your account with Google to unlock history, style, and teams.</p>
+          <p>
+            Create your account with Google to unlock history, style, and teams.
+          </p>
         </header>
 
         <GoogleSignInButton

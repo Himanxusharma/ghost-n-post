@@ -3,13 +3,17 @@
 import { useState } from "react";
 import type { CarouselSlide } from "@/lib/content";
 import { languageDisplayName } from "@/lib/content";
+import type { SocialPlatform } from "@/lib/validations";
+import { DraftEditor } from "./draft-editor";
 import { PublishPanel } from "./publish-panel";
-import { ThumbImage } from "./thumb-image";
+import { ThumbPreview } from "./thumb-preview";
+
 type PostResultProps = {
   postId: string;
   linkedinDraft: string;
   xDraft: string;
   xThread: string[];
+  platforms?: SocialPlatform[];
   regenerateCount?: number;
   carouselSlides?: CarouselSlide[];
   thumbnailUrl?: string | null;
@@ -24,6 +28,7 @@ export function PostResult({
   linkedinDraft,
   xDraft,
   xThread: initialThread,
+  platforms = ["linkedin", "x"],
   regenerateCount = 0,
   carouselSlides: initialCarousel = [],
   thumbnailUrl,
@@ -32,6 +37,14 @@ export function PostResult({
   language,
   videoTitle,
 }: PostResultProps) {
+  const showLinkedIn = platforms.includes("linkedin");
+  const showX = platforms.includes("x");
+  const platformLabel = [
+    showLinkedIn ? "LinkedIn" : null,
+    showX ? "X" : null,
+  ]
+    .filter(Boolean)
+    .join(" + ");
   const [linkedin, setLinkedin] = useState(linkedinDraft);
   const [xPost, setXPost] = useState(xDraft);
   const [xThread, setXThread] = useState(initialThread);
@@ -49,6 +62,8 @@ export function PostResult({
   const [thumbBusy, setThumbBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const regenerationsLeft = Math.max(0, 3 - regens);
+
   async function copyText(key: string, value: string) {
     await navigator.clipboard.writeText(value);
     setCopied(key);
@@ -56,20 +71,18 @@ export function PostResult({
   }
 
   function downloadMarkdown() {
-    const threadBlock =
-      xThread.length > 0
-        ? `\n\n## X Thread\n\n${xThread.join("\n\n")}`
-        : "";
-    const content = `# ${videoTitle ?? "Ghost n Post draft"}
-
-## LinkedIn
-
-${linkedin}
-
-## X
-
-${xPost}${threadBlock}
-`;
+    const sections: string[] = [`# ${videoTitle ?? "Ghost n Post draft"}`];
+    if (showLinkedIn) {
+      sections.push(`## LinkedIn\n\n${linkedin}`);
+    }
+    if (showX) {
+      const threadBlock =
+        xThread.length > 0
+          ? `\n\n## X Thread\n\n${xThread.join("\n\n")}`
+          : "";
+      sections.push(`## X\n\n${xPost}${threadBlock}`);
+    }
+    const content = `${sections.join("\n\n")}\n`;
     const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
@@ -81,12 +94,14 @@ ${xPost}${threadBlock}
 
   function downloadPlainText() {
     const content = [
-      "LINKEDIN",
-      linkedin,
-      "",
-      "X",
-      xPost,
-      ...(xThread.length > 1 ? ["", "THREAD", ...xThread] : []),
+      ...(showLinkedIn ? ["LINKEDIN", linkedin, ""] : []),
+      ...(showX
+        ? [
+            "X",
+            xPost,
+            ...(xThread.length > 1 ? ["", "THREAD", ...xThread] : []),
+          ]
+        : []),
     ].join("\n");
     const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
@@ -102,7 +117,6 @@ ${xPost}${threadBlock}
     fallbackFilename: string,
   ) {
     try {
-      // Same-origin proxy forces a real file download (no new-tab / CORS issues).
       const response = await fetch(
         `/api/posts/${postId}/download-thumbnail?kind=${kind}`,
       );
@@ -182,37 +196,73 @@ ${xPost}${threadBlock}
 
   return (
     <section className="result-panel animate-rise">
-      <div className="result-actions">
-        <button type="button" onClick={downloadMarkdown}>
-          Download markdown
-        </button>
-        <button type="button" onClick={downloadPlainText}>
-          Download text
-        </button>
-        {thumbnailUrl ? (
+      <header className="result-header">
+        <div className="result-header-copy">
+          <p className="result-kicker">Draft folio</p>
+          <h2 className="result-title">
+            {videoTitle?.trim() || "Generated drafts"}
+          </h2>
+          <p className="result-meta">
+            <span>{platformLabel || "Drafts"}</span>
+            {language ? (
+              <>
+                <span aria-hidden className="result-meta-sep">
+                  /
+                </span>
+                <span>{languageDisplayName(language)}</span>
+              </>
+            ) : null}
+            <span aria-hidden className="result-meta-sep">
+              /
+            </span>
+            <span>
+              {regenerationsLeft} regenerate
+              {regenerationsLeft === 1 ? "" : "s"} left
+            </span>
+          </p>
+        </div>
+
+        <div className="result-toolbar" role="toolbar" aria-label="Draft tools">
           <button
             type="button"
-            onClick={() =>
-              downloadThumbnail("video", `${videoTitle || "thumbnail"}.jpg`)
+            className="tool-btn"
+            onClick={downloadMarkdown}
+            title="Download markdown"
+          >
+            <IconMarkdown />
+            <span>Markdown</span>
+          </button>
+          <button
+            type="button"
+            className="tool-btn"
+            onClick={downloadPlainText}
+            title="Download plain text"
+          >
+            <IconText />
+            <span>Text</span>
+          </button>
+          <button
+            type="button"
+            className="tool-btn tool-btn-primary"
+            onClick={regenerate}
+            disabled={busy || regenerationsLeft <= 0}
+            title={
+              regenerationsLeft <= 0
+                ? "No regenerations left"
+                : `Regenerate drafts (${regenerationsLeft} left)`
             }
           >
-            Download video thumb
+            <IconRefresh spinning={busy} />
+            <span>
+              {busy
+                ? "Working…"
+                : regenerationsLeft <= 0
+                  ? "No regenerates"
+                  : "Regenerate"}
+            </span>
           </button>
-        ) : null}
-        <button
-          type="button"
-          onClick={regenerate}
-          disabled={busy || regens >= 3}
-        >
-          {busy ? "Regenerating…" : `Regenerate (${3 - regens} left)`}
-        </button>
-      </div>
-
-      {language ? (
-        <p className="hint">
-          Draft language: {languageDisplayName(language)}
-        </p>
-      ) : null}
+        </div>
+      </header>
 
       {error ? (
         <p className="field-error" role="alert">
@@ -220,106 +270,173 @@ ${xPost}${threadBlock}
         </p>
       ) : null}
 
-      <div className="draft-grid">
-        <article className="draft-block">
-          <header>
-            <h3>LinkedIn</h3>
-            <button type="button" onClick={() => copyText("li", linkedin)}>
-              {copied === "li" ? "Copied" : "Copy"}
-            </button>
-          </header>
-          <textarea
-            value={linkedin}
-            onChange={(event) => setLinkedin(event.target.value)}
-            rows={14}
-            aria-label="LinkedIn draft"
+      {thumbnailUrl ? (
+        <div className="result-media">
+          <ThumbPreview
+            src={thumbnailUrl}
+            alt={
+              videoTitle
+                ? `Thumbnail for ${videoTitle}`
+                : "Source video thumbnail"
+            }
+            label="Source thumbnail"
+            meta="From YouTube · 16:9"
+            priority
+            sizes="(max-width: 720px) 100vw, 380px"
+            downloadLabel="Download"
+            onDownload={() =>
+              downloadThumbnail("video", `${videoTitle || "thumbnail"}.jpg`)
+            }
           />
-        </article>
+        </div>
+      ) : null}
 
-        <article className="draft-block">
-          <header>
-            <h3>X</h3>
-            <button type="button" onClick={() => copyText("x", xPost)}>
-              {copied === "x" ? "Copied" : "Copy"}
-            </button>
-          </header>
-          <textarea
-            value={xPost}
-            onChange={(event) => setXPost(event.target.value)}
-            rows={6}
-            aria-label="X draft"
-          />
-
-          {xThread.length > 1 ? (
-            <div className="thread-block">
-              <h4>Thread</h4>
-              <ol>
-                {xThread.map((tweet, index) => (
-                  <li key={`${index}-${tweet.slice(0, 12)}`}>
-                    <textarea
-                      value={tweet}
-                      rows={3}
-                      aria-label={`Thread part ${index + 1}`}
-                      onChange={(event) => {
-                        const next = [...xThread];
-                        next[index] = event.target.value;
-                        setXThread(next);
-                      }}
-                    />
-                  </li>
-                ))}
-              </ol>
+      <div
+        className={`draft-grid${showLinkedIn && showX ? "" : " draft-grid-single"}`}
+      >
+        {showLinkedIn ? (
+          <article className="draft-block">
+            <header>
+              <div className="draft-heading">
+                <span className="draft-platform-icon" aria-hidden>
+                  <IconLinkedIn />
+                </span>
+                <div>
+                  <h3>LinkedIn</h3>
+                  <p className="draft-count">{linkedin.length} chars</p>
+                </div>
+              </div>
               <button
                 type="button"
-                onClick={() => copyText("thread", xThread.join("\n\n"))}
+                className="tool-btn tool-btn-compact"
+                onClick={() => copyText("li", linkedin)}
               >
-                {copied === "thread" ? "Copied" : "Copy thread"}
+                {copied === "li" ? <IconCheck /> : <IconCopy />}
+                <span>{copied === "li" ? "Copied" : "Copy"}</span>
               </button>
-            </div>
-          ) : null}
-        </article>
+            </header>
+            <DraftEditor
+              value={linkedin}
+              onChange={setLinkedin}
+              rows={14}
+              aria-label="LinkedIn draft"
+              hint="Select text → Bold / Italic. Copy pastes styled text into LinkedIn."
+            />
+          </article>
+        ) : null}
+
+        {showX ? (
+          <article className="draft-block">
+            <header>
+              <div className="draft-heading">
+                <span className="draft-platform-icon" aria-hidden>
+                  <IconX />
+                </span>
+                <div>
+                  <h3>X</h3>
+                  <p className="draft-count">{xPost.length} chars</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="tool-btn tool-btn-compact"
+                onClick={() => copyText("x", xPost)}
+              >
+                {copied === "x" ? <IconCheck /> : <IconCopy />}
+                <span>{copied === "x" ? "Copied" : "Copy"}</span>
+              </button>
+            </header>
+            <DraftEditor
+              value={xPost}
+              onChange={setXPost}
+              rows={6}
+              aria-label="X draft"
+              hint="Select text → format. Copy pastes into X with styling intact."
+            />
+
+            {xThread.length > 1 ? (
+              <div className="thread-block">
+                <div className="thread-header">
+                  <h4>Thread · {xThread.length} posts</h4>
+                  <button
+                    type="button"
+                    className="tool-btn tool-btn-compact"
+                    onClick={() => copyText("thread", xThread.join("\n\n"))}
+                  >
+                    {copied === "thread" ? <IconCheck /> : <IconCopy />}
+                    <span>{copied === "thread" ? "Copied" : "Copy all"}</span>
+                  </button>
+                </div>
+                <ol>
+                  {xThread.map((tweet, index) => (
+                    <li key={`${index}-${tweet.slice(0, 12)}`}>
+                      <span className="thread-index" aria-hidden>
+                        {String(index + 1).padStart(2, "0")}
+                      </span>
+                      <DraftEditor
+                        value={tweet}
+                        rows={3}
+                        aria-label={`Thread part ${index + 1}`}
+                        hint="Format this post, then copy — pastes into X as-is."
+                        onChange={(nextValue) => {
+                          const next = [...xThread];
+                          next[index] = nextValue;
+                          setXThread(next);
+                        }}
+                      />
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            ) : null}
+          </article>
+        ) : null}
       </div>
 
       <section className="custom-thumb-panel">
         <header className="publish-header">
-          <h3>Custom thumbnail</h3>
+          <div>
+            <p className="result-kicker">Asset</p>
+            <h3>Custom thumbnail</h3>
+          </div>
           <button
             type="button"
-            className="btn-quiet"
+            className="tool-btn"
             onClick={generateCustomThumbnail}
             disabled={thumbBusy}
           >
-            {thumbBusy
-              ? "Generating…"
-              : customThumbnailUrl
-                ? "Regenerate thumbnail"
-                : "Generate branded thumbnail"}
+            <IconSparkle />
+            <span>
+              {thumbBusy
+                ? "Generating…"
+                : customThumbnailUrl
+                  ? "Regenerate"
+                  : "Generate"}
+            </span>
           </button>
         </header>
         {customThumbnailUrl ? (
           <div className="custom-thumb-preview">
-            <ThumbImage
+            <ThumbPreview
               src={customThumbnailUrl}
               alt={customThumbnailHeadline || "Custom thumbnail"}
+              label="Branded thumbnail"
+              meta={customThumbnailHeadline || "Quote card · 1200×630"}
               width={1200}
               height={630}
-              sizes="(max-width: 720px) 100vw, 640px"
-            />
-            <button
-              type="button"
-              onClick={() =>
+              sizes="(max-width: 720px) 100vw, 560px"
+              downloadLabel="Download"
+              onDownload={() =>
                 downloadThumbnail(
                   "custom",
                   `${videoTitle || "custom-thumbnail"}.png`,
                 )
               }
-            >
-              Download custom thumbnail
-            </button>
+            />
           </div>
         ) : (
           <p className="hint">
-            Create a quote-card image from the draft for LinkedIn/X.
+            Create a quote-card image from the draft for LinkedIn or X.
           </p>
         )}
       </section>
@@ -331,8 +448,117 @@ ${xPost}${threadBlock}
         xThread={xThread}
         carouselSlides={carouselSlides}
         customThumbnailUrl={customThumbnailUrl}
+        platforms={platforms}
         onCarouselGenerated={setCarouselSlides}
       />
     </section>
+  );
+}
+
+function IconMarkdown() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M4 6h16v12H4V6Z"
+        stroke="currentColor"
+        strokeWidth="1.6"
+      />
+      <path
+        d="M7 15V9l2.5 3L12 9v6M14.5 12.5 16 15l1.5-2.5M16 9v6"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="square"
+      />
+    </svg>
+  );
+}
+
+function IconText() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M5 7h14M8 7v10M16 7v10M10 17h4"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="square"
+      />
+    </svg>
+  );
+}
+
+function IconRefresh({ spinning = false }: { spinning?: boolean }) {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden
+      className={spinning ? "icon-spin" : undefined}
+    >
+      <path
+        d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="square"
+      />
+      <path
+        d="M19.5 4.5V9H15"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="square"
+      />
+    </svg>
+  );
+}
+
+function IconCopy() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path d="M9 9h11v11H9V9Z" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M4 15V4h11" stroke="currentColor" strokeWidth="1.6" />
+    </svg>
+  );
+}
+
+function IconCheck() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="m5 12 5 5L20 7"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="square"
+      />
+    </svg>
+  );
+}
+
+function IconLinkedIn() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M6.5 9.5H3.8v10.7h2.7V9.5ZM5.15 4.3a1.7 1.7 0 1 0 0 3.4 1.7 1.7 0 0 0 0-3.4ZM20.2 13.2c0-2.7-1.5-4-3.5-4-1.3 0-2.2.6-2.7 1.4h-.1V9.5H11.4c0 .5 0 10.7 0 10.7h2.7v-6c0-.3 0-.6.1-.8.3-.6.9-1.2 1.9-1.2 1.3 0 1.9.9 1.9 2.3v5.7h2.7v-6Z" />
+    </svg>
+  );
+}
+
+function IconX() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M18.2 3H21l-6.5 7.4L22 21h-5.6l-4.4-5.7L6.7 21H4l7-7.9L2.4 3h5.7l4 5.2L18.2 3Zm-1 16.3h1.6L7.1 4.6H5.4l11.8 14.7Z" />
+    </svg>
+  );
+}
+
+function IconSparkle() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M12 3v4M12 17v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M3 12h4M17 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="square"
+      />
+    </svg>
   );
 }

@@ -3,8 +3,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useState } from "react";
+import { PageHeader } from "@/components/page-header";
 import { SiteHeader } from "@/components/site-header";
 import { StyleSettingsModal } from "@/components/style-settings-modal";
+import { ListSkeleton } from "@/components/ui-skeleton";
 
 type TokenRow = {
   id: string;
@@ -66,89 +68,95 @@ export default function ExtensionPage() {
     <div className="page-shell">
       <SiteHeader onOpenStyle={() => setStyleOpen(true)} />
       <main id="main-content" className="history-page" tabIndex={-1}>
-        <header className="history-header">
-          <p className="brand-sm">Ghost n Post</p>
-          <h1>Chrome extension</h1>
-          <p>
-            Install the local extension, paste your API base URL and token, then
-            ghostwrite from any YouTube watch page.
-          </p>
-        </header>
-
-        <section className="extension-steps">
-          <ol>
-            <li>
-              Open <code>chrome://extensions</code>, enable Developer mode, and
-              Load unpacked from the repo&apos;s <code>extension/</code> folder.
-            </li>
-            <li>Create an API token below and paste it into the extension options.</li>
-            <li>
-              Set API base URL to <code>{appUrl}</code>
-            </li>
-            <li>
-              On YouTube, use the toolbar popup or the on-page &quot;Ghost n
-              Post&quot; button.
-            </li>
-          </ol>
-        </section>
-
-        <div className="publish-actions">
-          <button
-            type="button"
-            onClick={() => createMutation.mutate()}
-            disabled={createMutation.isPending}
+        <div className="page-panel">
+          <PageHeader
+            stamp="Extension"
+            title="Chrome extension"
+            description="Install the local extension, paste your API base URL and token, then ghostwrite from any YouTube watch page."
           >
-            {createMutation.isPending ? "Creating…" : "Create API token"}
-          </button>
-          <Link href="/" className="text-link">
-            Open app
-          </Link>
+            <button
+              type="button"
+              className="tool-btn tool-btn-primary"
+              onClick={() => createMutation.mutate()}
+              disabled={createMutation.isPending}
+            >
+              {createMutation.isPending ? "Creating…" : "Create API token"}
+            </button>
+            <Link href="/" className="text-link">
+              Open app
+            </Link>
+          </PageHeader>
+
+          <section className="extension-steps">
+            <ol>
+              <li>
+                Open <code>chrome://extensions</code>, enable Developer mode,
+                and Load unpacked from the repo&apos;s <code>extension/</code>{" "}
+                folder.
+              </li>
+              <li>
+                Create an API token below and paste it into the extension
+                options.
+              </li>
+              <li>
+                Set API base URL to <code>{appUrl}</code>
+              </li>
+              <li>
+                On YouTube, use the toolbar popup or the on-page &quot;Ghost n
+                Post&quot; button.
+              </li>
+            </ol>
+          </section>
+
+          {freshToken ? (
+            <div className="token-reveal">
+              <p>Copy this token now — it won&apos;t be shown again.</p>
+              <code>{freshToken}</code>
+            </div>
+          ) : null}
+
+          {createMutation.isError ? (
+            <p className="field-error" role="alert">
+              {(createMutation.error as Error).message}
+            </p>
+          ) : null}
+          {tokensQuery.isLoading ? <ListSkeleton rows={3} /> : null}
+          {tokensQuery.isError ? (
+            <p className="field-error" role="alert">
+              {(tokensQuery.error as Error).message}
+            </p>
+          ) : null}
+
+          {!tokensQuery.isLoading ? (
+            <ul className="history-list">
+              {(tokensQuery.data ?? []).map((token) => (
+                <li key={token.id} className="publication-row">
+                  <div className="thumb-placeholder platform-badge">key</div>
+                  <div className="history-meta">
+                    <h2>{token.name}</h2>
+                    <p className="hint">
+                      {token.tokenPrefix}… · created{" "}
+                      {new Date(token.createdAt).toLocaleString()}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    className="btn-quiet"
+                    onClick={() => revokeMutation.mutate(token.id)}
+                    disabled={revokeMutation.isPending}
+                  >
+                    Revoke
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          {!tokensQuery.isLoading && tokensQuery.data?.length === 0 ? (
+            <p className="hint">
+              No active tokens yet. Create one to use the extension.
+            </p>
+          ) : null}
         </div>
-
-        {freshToken ? (
-          <div className="token-reveal">
-            <p>Copy this token now — it won&apos;t be shown again.</p>
-            <code>{freshToken}</code>
-          </div>
-        ) : null}
-
-        {createMutation.isError ? (
-          <p className="field-error" role="alert">
-            {(createMutation.error as Error).message}
-          </p>
-        ) : null}
-        {tokensQuery.isLoading ? <p className="hint">Loading tokens…</p> : null}
-        {tokensQuery.isError ? (
-          <p className="field-error" role="alert">
-            {(tokensQuery.error as Error).message}
-          </p>
-        ) : null}
-
-        <ul className="history-list">
-          {(tokensQuery.data ?? []).map((token) => (
-            <li key={token.id} className="publication-row">
-              <div className="thumb-placeholder platform-badge">key</div>
-              <div className="history-meta">
-                <h2>{token.name}</h2>
-                <p className="hint">
-                  {token.tokenPrefix}… · created{" "}
-                  {new Date(token.createdAt).toLocaleString()}
-                </p>
-              </div>
-              <button
-                type="button"
-                className="btn-quiet"
-                onClick={() => revokeMutation.mutate(token.id)}
-                disabled={revokeMutation.isPending}
-              >
-                Revoke
-              </button>
-            </li>
-          ))}
-        </ul>
-        {tokensQuery.data?.length === 0 ? (
-          <p className="hint">No active tokens yet. Create one to use the extension.</p>
-        ) : null}
       </main>
       {styleOpen ? (
         <StyleSettingsModal
