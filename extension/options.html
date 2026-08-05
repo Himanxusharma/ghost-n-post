@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Ghost n Post settings</title>
+    <link rel="stylesheet" href="popup.css" />
+    <style>
+      body {
+        width: auto;
+        max-width: 520px;
+        margin: 0 auto;
+      }
+      label {
+        display: grid;
+        gap: 6px;
+        font-size: 13px;
+      }
+      input {
+        padding: 10px;
+        border: 1px solid #c5d3de;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Extension settings</h1>
+      <label>
+        API base URL
+        <input id="apiBaseUrl" type="url" placeholder="http://localhost:3000" />
+      </label>
+      <label>
+        API token (gnp_…)
+        <input id="apiToken" type="password" placeholder="gnp_…" />
+      </label>
+      <button id="save" class="primary" type="button">Save</button>
+      <p id="status"></p>
+    </main>
+    <script src="options.js"></script>
+  </body>
+</html>

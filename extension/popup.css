@@ -1,0 +1,53 @@
+:root {
+  color-scheme: light;
+  font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+body {
+  margin: 0;
+  width: 280px;
+  background: #eef3f7;
+  color: #122033;
+}
+
+main {
+  padding: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+p {
+  margin: 0;
+  font-size: 13px;
+  color: #3a4a5c;
+}
+
+button {
+  border: 0;
+  padding: 10px 12px;
+  background: #d5e3ec;
+  color: #122033;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button.primary {
+  background: #0f7a7a;
+  color: white;
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+a {
+  color: #0a5555;
+  font-size: 12px;
+}
