@@ -103,12 +103,23 @@ export const generateVideoPosts = inngest.createFunction(
         await updateJobStage(jobId, "transcribing");
 
         const captions = await fetchCaptionsTranscript(metadata.youtubeId);
-        const result =
-          captions ??
-          (await transcribeFromAudioUrl(
-            metadata.youtubeId,
-            requestedLanguage,
-          ));
+        let result = captions;
+
+        if (!result) {
+          try {
+            result = await transcribeFromAudioUrl(
+              metadata.youtubeId,
+              requestedLanguage,
+            );
+          } catch (error) {
+            const detail =
+              error instanceof Error ? error.message : "STT fallback failed";
+            throw new NonRetriableError(
+              `No captions found for this video, and speech-to-text fallback failed (${detail}). ` +
+                "Use a video with captions/subtitles, or set a real DEEPGRAM_API_KEY once audio URLs resolve.",
+            );
+          }
+        }
 
         if (!result.text.trim()) {
           throw new NonRetriableError(

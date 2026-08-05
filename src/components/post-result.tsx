@@ -97,14 +97,43 @@ ${xPost}${threadBlock}
     URL.revokeObjectURL(url);
   }
 
-  function downloadThumbnail(url: string | null | undefined, filename: string) {
-    if (!url) return;
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = filename;
-    anchor.target = "_blank";
-    anchor.rel = "noreferrer";
-    anchor.click();
+  async function downloadThumbnail(
+    kind: "video" | "custom",
+    fallbackFilename: string,
+  ) {
+    try {
+      // Same-origin proxy forces a real file download (no new-tab / CORS issues).
+      const response = await fetch(
+        `/api/posts/${postId}/download-thumbnail?kind=${kind}`,
+      );
+      if (!response.ok) {
+        const json = await response.json().catch(() => null);
+        throw new Error(
+          json?.error?.message ??
+            `Could not download thumbnail (${response.status})`,
+        );
+      }
+
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const header = response.headers.get("Content-Disposition") ?? "";
+      const match = /filename="([^"]+)"/.exec(header);
+      const filename = match?.[1] ?? fallbackFilename;
+
+      const anchor = document.createElement("a");
+      anchor.href = objectUrl;
+      anchor.download = filename;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(objectUrl);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Could not download thumbnail to this device",
+      );
+    }
   }
 
   async function regenerate() {
@@ -163,7 +192,9 @@ ${xPost}${threadBlock}
         {thumbnailUrl ? (
           <button
             type="button"
-            onClick={() => downloadThumbnail(thumbnailUrl, "thumbnail.jpg")}
+            onClick={() =>
+              downloadThumbnail("video", `${videoTitle || "thumbnail"}.jpg`)
+            }
           >
             Download video thumb
           </button>
@@ -277,7 +308,10 @@ ${xPost}${threadBlock}
             <button
               type="button"
               onClick={() =>
-                downloadThumbnail(customThumbnailUrl, "custom-thumbnail.png")
+                downloadThumbnail(
+                  "custom",
+                  `${videoTitle || "custom-thumbnail"}.png`,
+                )
               }
             >
               Download custom thumbnail

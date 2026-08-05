@@ -86,10 +86,16 @@ export async function fetchVideoMetadata(
 /**
  * Try creator/auto captions first. Returns null when none are available
  * so the caller can fall back to URL-based STT.
+ *
+ * Prefer timedtext caption tracks (more reliable than getTranscript, which
+ * often 400s). Fall back to the panel transcript API when tracks are missing.
  */
 export async function fetchCaptionsTranscript(
   youtubeId: string,
 ): Promise<TranscriptResult | null> {
+  const fromTracks = await fetchCaptionsFromTracks(youtubeId);
+  if (fromTracks) return fromTracks;
+
   try {
     const yt = await getClient();
     const info = await yt.getInfo(youtubeId);
@@ -123,21 +129,138 @@ export async function fetchCaptionsTranscript(
   }
 }
 
+/**
+ * Pull captions via player captionTracks → timedtext JSON3.
+ * Works for many videos where getTranscript() fails.
+ */
+async function fetchCaptionsFromTracks(
+  youtubeId: string,
+): Promise<TranscriptResult | null> {
+  try {
+    const yt = await getClient();
+    // TV / WEB often expose caption tracks more reliably than default client.
+    let info;
+    try {
+      info = await yt.getBasicInfo(youtubeId, { client: "TV" });
+    } catch {
+      info = await yt.getBasicInfo(youtubeId);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const tracks: any[] =
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (info as any)?.captions?.caption_tracks ??
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (info as any)?.captions?.player_captions_tracklist_renderer
+        ?.caption_tracks ??
+      [];
+
+    if (!Array.isArray(tracks) || tracks.length === 0) {
+      return null;
+    }
+
+    const preferred =
+      tracks.find(
+        (t) => t.language_code === "en" && t.kind !== "asr",
+      ) ||
+      tracks.find((t) => String(t.language_code ?? "").startsWith("en")) ||
+      tracks.find((t) => t.kind !== "asr") ||
+      tracks[0];
+
+    const baseUrl: string | undefined =
+      preferred?.base_url || preferred?.baseUrl || preferred?.url;
+    if (!baseUrl) return null;
+
+    const timedUrl = baseUrl.includes("fmt=")
+      ? baseUrl
+      : `${baseUrl}${baseUrl.includes("?") ? "&" : "?"}fmt=json3`;
+
+    const response = await fetch(timedUrl, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+      },
+    });
+    if (!response.ok) return null;
+
+    const payload = (await response.json()) as {
+      events?: Array<{
+        tStartMs?: number;
+        segs?: Array<{ utf8?: string }>;
+      }>;
+    };
+
+    const parsed = (payload.events ?? [])
+      .map((event) => {
+        const text = (event.segs ?? [])
+          .map((seg) => seg.utf8 ?? "")
+          .join("")
+          .replace(/\n/g, " ")
+          .trim();
+        return {
+          start: String(event.tStartMs ?? 0),
+          text,
+        };
+      })
+      .filter((segment) => segment.text.length > 0);
+
+    if (parsed.length === 0) return null;
+
+    return {
+      text: parsed.map((s) => s.text).join(" "),
+      source: "captions",
+      segments: parsed,
+    };
+  } catch {
+    return null;
+  }
+}
+
 /** Resolve a streaming audio URL for Deepgram to pull directly. */
 export async function resolveAudioStreamUrl(
   youtubeId: string,
 ): Promise<string> {
   const yt = await getClient();
-  const format = await yt.getStreamingData(youtubeId, {
-    type: "audio",
-    quality: "bestefficiency",
-  });
 
-  if (!format?.url) {
-    throw new Error("Could not resolve an audio stream URL for this video");
+  // Prefer chooseFormat + decipher — getStreamingData often returns undeciphered URLs.
+  const clients = ["TV", "WEB"] as const;
+  let lastError: unknown;
+
+  for (const client of [...clients, null] as const) {
+    try {
+      const info = client
+        ? await yt.getBasicInfo(youtubeId, { client })
+        : await yt.getBasicInfo(youtubeId);
+
+      const format = info.chooseFormat({
+        type: "audio",
+        quality: "bestefficiency",
+      });
+
+      if (!format) continue;
+
+      // Already-deciphered URL, or decipher via player.
+      const url =
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (format as any).url ||
+        (typeof format.decipher === "function"
+          ? format.decipher(yt.session.player)
+          : null);
+
+      if (typeof url === "string" && url.startsWith("http")) {
+        return url;
+      }
+    } catch (error) {
+      lastError = error;
+    }
   }
 
-  return format.url;
+  const detail =
+    lastError instanceof Error ? lastError.message : "No valid URL to decipher";
+  throw new Error(
+    `Could not resolve an audio stream URL for this video (${detail}). ` +
+      "Try a video with captions enabled, or configure Deepgram after YouTube stream access works.",
+  );
 }
 
 export type ChannelVideoSummary = {

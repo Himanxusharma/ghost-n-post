@@ -10,8 +10,8 @@ export async function transcribeFromAudioUrl(
   youtubeId: string,
   language: string = "auto",
 ): Promise<TranscriptResult> {
-  const apiKey = process.env.DEEPGRAM_API_KEY;
-  if (!apiKey) {
+  const apiKey = process.env.DEEPGRAM_API_KEY?.trim();
+  if (!apiKey || apiKey.includes("placeholder")) {
     throw new Error(
       "No captions available and DEEPGRAM_API_KEY is not configured for speech-to-text fallback.",
     );
