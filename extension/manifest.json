@@ -22,6 +22,7 @@
     "https://www.youtube.com/*",
     "https://youtube.com/*",
     "http://localhost:3000/*",
+    "http://localhost:3010/*",
     "https://*/*"
   ],
   "background": {

@@ -5,12 +5,12 @@ LinkedIn or X post — in your own voice.
 
 ## What it does
 
-1. Paste a YouTube link.
+1. Paste a YouTube link and choose platforms (LinkedIn, X, or both).
 2. We pull the transcript (captions or speech-to-text), extract the video's
    thumbnail, and analyze the content.
-3. We generate a platform-ready post (LinkedIn or X) — optionally matched
-   to your writing style using sample posts you provide.
-4. You review, edit, and export or publish.
+3. We generate platform-ready drafts — optionally matched to your writing
+   style using sample posts you provide.
+4. You review, format, edit, export, or publish / schedule.
 
 ## Why
 
@@ -21,12 +21,16 @@ style-matching layer so output doesn't read like generic AI copy.
 
 ## Core Features
 
-- YouTube link → auto-fetched thumbnail (no upload needed)
-- Automatic transcript extraction (captions first, STT fallback)
-- LLM-generated LinkedIn and X post drafts (multiple variants)
-- Voice-matching via user-submitted sample posts (style profile, reusable)
+- YouTube link → auto-fetched thumbnail (download + branded custom thumb)
+- Automatic transcript extraction (captions first, Deepgram STT fallback)
+- LLM-generated LinkedIn and/or X drafts (platform checkboxes)
+- Unicode-safe draft formatting (bold/italic/etc. that pastes into LinkedIn/X)
+- Voice-matching via sample posts (style profile, reusable)
 - X thread splitting for long-form insight
-- Minimal, distraction-free UI — one input, one output, no dashboard clutter
+- Publish / schedule to LinkedIn & X, history, batch/channel, analytics, teams
+- Chrome extension companion (`extension/`)
+- Dark tactile-brutalist UI, responsive layouts, loading skeletons
+- Branded favicon / tab icon (lime **G** monogram)
 
 ## Architecture: One App, One Deploy
 
@@ -37,7 +41,7 @@ worker fleet to host or keep alive elsewhere.
 
 ```
 Next.js (App Router)
- ├─ Pages: minimalist single-page flow
+ ├─ Pages: home draft studio + secondary screens (history, batch, …)
  ├─ Route Handlers (/app/api/*): validation, auth, data access
  └─ Inngest functions (/app/api/inngest): durable multi-step
     background pipeline (metadata → transcript → generation → save)
@@ -52,7 +56,7 @@ Next.js (App Router)
 - **LLM generation:** Groq (`llama-3.3-70b-versatile` by default)
 - **Database:** Neon Postgres via the Vercel Postgres integration + Drizzle ORM
 - **Storage:** Vercel Blob (thumbnails, transcripts)
-- **Auth:** Clerk
+- **Auth:** Clerk (Google OAuth only)
 - **Rate limiting:** Upstash Redis + `@upstash/ratelimit`
 - **Hosting:** Vercel (single project — frontend, API, and jobs all included)
 
@@ -81,12 +85,15 @@ cp .env.example .env.local
 # Push the Drizzle schema to Neon
 npm run db:push
 
-# Run the app locally
-npm run dev
+# Run the app (match port with NEXT_PUBLIC_APP_URL + inngest:dev)
+npm run dev -- -p 3010
 
-# Run Inngest's local dev server in a second terminal (for background job testing)
+# Run Inngest's local dev server in a second terminal
 npm run inngest:dev
 ```
+
+`inngest:dev` targets `http://localhost:3010/api/inngest`. If you use another
+port, update that script and `NEXT_PUBLIC_APP_URL` to match.
 
 That's it — no second service, no Docker Compose, no separate worker
 process to start.
@@ -101,17 +108,18 @@ BLOB_READ_WRITE_TOKEN=     # Vercel Blob
 INNGEST_DEV=1              # local only — omit in production
 INNGEST_EVENT_KEY=
 INNGEST_SIGNING_KEY=
-DEEPGRAM_API_KEY=
+DEEPGRAM_API_KEY=            # optional but recommended for caption-less videos
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
 CLERK_SECRET_KEY=
 NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
 NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
 NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/
 NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-LINKEDIN_CLIENT_ID=        # Phase 2 publish
+NEXT_PUBLIC_APP_URL=http://localhost:3010
+OAUTH_STATE_SECRET=          # optional; defaults to CLERK_SECRET_KEY
+LINKEDIN_CLIENT_ID=          # publish / schedule
 LINKEDIN_CLIENT_SECRET=
-X_CLIENT_ID=               # Phase 2 publish
+X_CLIENT_ID=
 X_CLIENT_SECRET=
 UPSTASH_REDIS_REST_URL=
 UPSTASH_REDIS_REST_TOKEN=
@@ -124,17 +132,17 @@ UPSTASH_REDIS_REST_TOKEN=
 3. In Clerk → **User & authentication → Social connections**, enable **Google** only.
 4. Disable email/password and any other social providers so Google is the sole method.
 5. In Clerk → Configure → Paths, set sign-in `/sign-in` and sign-up `/sign-up`.
-6. Allow `http://localhost:3000` (and your production domain) as origins / redirect URLs.
+6. Allow `http://localhost:3010` (and your production domain) as origins / redirect URLs.
 7. After first Google sign-in, `AuthSync` calls `GET /api/me` to upsert your Neon `users` row.
 
 The app UI only offers **Continue with Google** (custom OAuth via `/sso-callback`). Protected pages redirect unsigned visitors to `/sign-in`; protected APIs return JSON `401`.
 
-## Deployment
+## Deployment (Vercel)
 
-Deploy the repo to Vercel as a single project. Connect the Neon Postgres,
-Vercel Blob, and Inngest integrations from the Vercel dashboard (or via
-`vercel env pull` after setting them up), set the environment variables
-above, and push to `main`. One deploy, everything included.
+Deploy the repo to Vercel as a single project. Connect Neon Postgres,
+Vercel Blob, and Inngest from the Vercel dashboard, set env vars, deploy.
+
+**Do not set `INNGEST_DEV` in production.**
 
 **Production required env** (boot fails closed if missing):
 
@@ -144,15 +152,21 @@ above, and push to `main`. One deploy, everything included.
 - `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`
 - `NEXT_PUBLIC_APP_URL` (canonical https origin; also used for OAuth + SEO)
 
-Optional: `DEEPGRAM_API_KEY`, LinkedIn/X OAuth keys, `OAUTH_STATE_SECRET`.
+Optional: `DEEPGRAM_API_KEY`, LinkedIn/X OAuth keys, `OAUTH_STATE_SECRET`, `GROQ_MODEL`.
 
-For Phase 2 publishing, register LinkedIn and X developer apps and set the
-OAuth callback URLs to:
+After first prod deploy, push schema once:
+
+```bash
+DATABASE_URL="your-prod-neon-url" npm run db:push
+```
+
+For publishing, register LinkedIn and X developer apps and set callbacks to:
 
 - `{NEXT_PUBLIC_APP_URL}/api/social/linkedin/callback`
 - `{NEXT_PUBLIC_APP_URL}/api/social/x/callback`
 
-Also allow your production origin in the Clerk dashboard (Google OAuth).
+Also allow your production origin in the Clerk dashboard (Google OAuth) and
+sync Inngest with the deployed `/api/inngest` route.
 
 ## Status
 
@@ -171,7 +185,7 @@ flow. Load the unpacked extension from `extension/` (see
 
 ```bash
 # App
-npm run dev
+npm run dev -- -p 3010
 npm run inngest:dev
 
 # Extension
@@ -186,14 +200,14 @@ analytics are partner-gated).
 
 ## Phase 4 quick start
 
-- Homepage language selector controls STT + Claude output language (`auto`
+- Homepage language selector controls STT + generation language (`auto`
   detects from transcript).
 - `/team` — create a workspace, invite by email link, set active team
   (new generations attach to the active team).
-- Post results → **Generate branded thumbnail** (Claude headline + OG image
+- Post results → **Generate branded thumbnail** (Groq headline + OG image
   to Blob); optionally attach on publish.
 
-After pulling Phase 4 schema changes, run:
+After pulling schema changes, run:
 
 ```bash
 npm run db:push

@@ -1,8 +1,8 @@
 # Product Requirements Document (PRD)
 
 **Product:** Ghost n Post
-**Version:** 2.0 (MVP — Single-Deploy Architecture)
-**Status:** Draft
+**Version:** 2.1
+**Status:** Phase 1–4 shipped (iterate / harden)
 
 ---
 
@@ -32,41 +32,43 @@ product itself as simply as possible: one repo, one deploy, on Vercel.
 
 ## 4. User Stories
 
-- As a creator, I want to paste a YouTube link and get a LinkedIn post
+- As a creator, I want to paste a YouTube link and get a LinkedIn / X post
   draft so I don't have to write it myself.
+- As a creator, I want to choose LinkedIn, X, or both before generating.
 - As a creator, I want the generated post to sound like *me*, not like
   generic AI copy.
 - As a creator, I want the video's thumbnail auto-attached so I don't have
   to design one.
-- As a creator, I want multiple post variants so I can pick the best hook.
+- As a creator, I want formatting that still looks right when I paste into
+  LinkedIn or X.
 - As an X user, I want long insights automatically split into a thread.
 - As a returning user, I want my voice/style saved so I don't re-paste
   examples every time.
+- As a creator, I want to publish or schedule drafts without leaving the app.
 
 ## 5. Scope
 
-### In Scope (MVP)
-- YouTube URL input → transcript extraction
-- Thumbnail auto-fetch
-- LinkedIn post generation (1 format)
-- X post + thread generation
-- Style-matching via user-submitted sample posts (few-shot, stored per user)
-- Copy/export generated post
-- Minimal single-page UI (input → output, no dashboard sprawl)
-- Single-repo, single-deploy delivery on Vercel (no separate backend
-  service to host)
+### Shipped (Phase 1–4)
 
-### Out of Scope (MVP — future phases)
-- Direct publishing to LinkedIn/X (API posting)
-- Chrome extension
-- Batch/channel-level processing
-- Auto-generated quote-card thumbnails
-- Scheduling
-- Team/agency multi-seat accounts
+- YouTube URL input → transcript extraction → Groq drafts
+- Platform selection (LinkedIn / X)
+- Thumbnail auto-fetch + download; custom branded thumbnail generation
+- Style-matching via sample posts
+- Copy / markdown / text export; Unicode formatting editor
+- Publish + schedule to LinkedIn/X
+- History, batch/channel mode, analytics, Chrome extension, teams
+- Multi-language generation (`auto` + explicit locales)
+- Responsive UI + loading skeletons; single Vercel deploy
+
+### Future / open
+
+- Deeper LinkedIn analytics (partner-gated today)
+- Pricing / freemium metering
+- Broader video sources beyond YouTube
 
 ## 6. Success Metrics
 
-| Metric | Target (MVP) |
+| Metric | Target |
 |---|---|
 | Time from link paste to usable draft | < 90 seconds (avg video) |
 | % of generated posts published with minor/no edits | > 40% |
@@ -77,44 +79,35 @@ product itself as simply as possible: one repo, one deploy, on Vercel.
 
 - Assumes video has either existing captions or clear spoken audio (not
   purely music/visual content).
-- Videos are assumed to be under a reasonable length cap for MVP (e.g., 60
-  min) to control transcription cost/time.
-- Public videos only (no private/unlisted auth-gated content in MVP).
-- English-first; multilingual support is a future phase.
-- Extraction relies on `youtubei.js` (pure JS) rather than a Python binary
-  like `yt-dlp`, to keep the whole product deployable as a single Node/Next.js
-  app on Vercel. This is a deliberate simplicity-over-maximal-coverage
-  trade-off for MVP — see TRD §7 for edge cases this may not cover.
+- Videos are assumed to be under a reasonable length cap (e.g., 60 min) to
+  control transcription cost/time.
+- Public videos only for the primary flow (no private/auth-gated YouTube).
+- Multilingual drafts are supported; quality depends on transcript + model.
+- Extraction relies on `youtubei.js` (pure JS) rather than `yt-dlp`, to keep
+  the product deployable as a single Node/Next.js app on Vercel.
+- Auth is **Google-only** via Clerk.
 
 ## 8. Risks
 
 | Risk | Mitigation |
 |---|---|
-| YouTube ToS / scraping restrictions | Use official YouTube Data API where possible; `youtubei.js` for caption/metadata access with usage monitoring |
-| Transcription cost at scale | Prefer free YouTube captions first; only fall back to paid STT (Deepgram/AssemblyAI) when necessary |
-| Generic-sounding AI output | Style-profile layer + multiple variants + easy regeneration |
-| Copyright concerns (posting video content) | Only extract/paraphrase, never republish transcript verbatim; thumbnail usage falls under standard embed/preview norms |
-| `youtubei.js` coverage gaps vs. yt-dlp for edge-case videos | Monitor failure rate in production; if material, add a narrow, dedicated extraction fallback rather than reintroducing a full second service |
+| YouTube ToS / scraping restrictions | Prefer captions; monitor `youtubei.js` failure rate |
+| Transcription cost at scale | Prefer free YouTube captions; Deepgram only as fallback |
+| Generic-sounding AI output | Style-profile layer + regenerates + easy inline edit |
+| Copyright concerns | Paraphrase into posts; never republish transcript verbatim |
+| `youtubei.js` coverage gaps | Monitor failures; narrow fallback if material |
 
 ## 9. Phased Roadmap
 
-- **Phase 1 (MVP):** Core pipeline — link → transcript → post + thumbnail,
-  style matching via sample posts, all shipped as one Vercel-deployed
-  Next.js app with Inngest-orchestrated background jobs.
-- **Phase 2:** Direct publishing (LinkedIn/X API), scheduling,
-  carousel/image post generation.
-- **Phase 3:** Chrome extension, batch/channel mode, analytics on post
-  performance.
-- **Phase 4:** Multi-language support, team accounts, custom thumbnail
-  generation.
+- **Phase 1 — shipped:** Core pipeline, style matching, history
+- **Phase 2 — shipped:** Direct publishing, scheduling, carousel images
+- **Phase 3 — shipped:** Chrome extension, batch/channel, analytics
+- **Phase 4 — shipped:** Multi-language, team accounts, custom thumbnails
 
 ## 10. Open Questions
 
-- Do we support unlisted/private videos in a later phase (requires OAuth)?
+- Do we support unlisted/private videos later (requires YouTube OAuth)?
 - Pricing model — freemium credits per video vs. flat subscription?
-- Do we store transcripts long-term, or purge after generation for
-  storage/privacy reasons?
-- At what job volume would Inngest's free tier need to move to a paid
-  tier, and does that change the "single deploy" simplicity story? (It
-  doesn't add infra to host — just usage-based billing — but worth
-  tracking.)
+- Do we store transcripts long-term, or purge after generation?
+- At what job volume does Inngest leave the free tier (billing only — still
+  no extra infra to host)?

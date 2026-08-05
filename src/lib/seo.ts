@@ -30,7 +30,16 @@ export const rootMetadata: Metadata = {
     "X Twitter drafts",
   ],
   icons: {
-    icon: [{ url: "/favicon.ico", sizes: "any" }],
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/icon", type: "image/png", sizes: "32x32" },
+      { url: "/favicon.ico", sizes: "any" },
+    ],
+    apple: [{ url: "/apple-icon", type: "image/png", sizes: "180x180" }],
+  },
+  manifest: "/site.webmanifest",
+  other: {
+    "theme-color": "#0e0e0c",
   },
   openGraph: {
     type: "website",

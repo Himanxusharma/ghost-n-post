@@ -1,0 +1,23 @@
+{
+  "name": "Ghost n Post",
+  "short_name": "Ghost n Post",
+  "description": "Turn any YouTube video into a ready-to-publish LinkedIn or X post in your own voice.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0e0e0c",
+  "theme_color": "#0e0e0c",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/apple-icon",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
