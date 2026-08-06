@@ -1,5 +1,7 @@
 import { z } from "zod";
 import { completeJson, completeText } from "@/lib/llm";
+import { getPostFormat, type PostFormatId } from "@/lib/post-formats";
+import { polishSocialDraft } from "@/lib/post-format";
 import type { SocialPlatform } from "@/lib/validations";
 
 const generatedPostsSchema = z.object({
@@ -38,6 +40,7 @@ export async function generateSocialPosts(input: {
   styleProfile?: string | null;
   language?: string;
   platforms?: SocialPlatform[];
+  formatId?: string | null;
 }): Promise<GeneratedPosts> {
   const style = input.styleProfile?.trim() || DEFAULT_STYLE;
   const transcript = prepareTranscriptForPrompt(input.transcript);
@@ -46,11 +49,12 @@ export async function generateSocialPosts(input: {
   const platforms = normalizePlatforms(input.platforms);
   const wantLinkedIn = platforms.includes("linkedin");
   const wantX = platforms.includes("x");
+  const format = getPostFormat(input.formatId);
 
   const shapeLines: string[] = [];
   if (wantLinkedIn) {
     shapeLines.push(
-      `"linkedin": "long-form LinkedIn post with a strong hook, body paragraphs, and a closing line"`,
+      `"linkedin": "LinkedIn post using real \\\\n line breaks following the selected format structure"`,
     );
   } else {
     shapeLines.push(`"linkedin": ""`);
@@ -67,12 +71,28 @@ export async function generateSocialPosts(input: {
   const rules: string[] = [];
   if (wantLinkedIn) {
     rules.push(
-      "- LinkedIn: structured, scannable, no emoji overload, no hashtag walls.",
+      "- LinkedIn MUST include real newline characters (\\n), not one dense paragraph.",
+    );
+    rules.push(
+      `- LinkedIn format selected: "${format.name}" (${format.id}). Follow its structure rules strictly.`,
+    );
+    rules.push(format.structurePrompt);
+    rules.push(
+      "- LinkedIn emphasis: wrap the hook in **double asterisks** for bold. Wrap 1-2 short key phrases in *single asterisks* for italic. Do not bold the whole post.",
+    );
+    rules.push(
+      "- LinkedIn: scannable like a native feed post. No emoji overload, no hashtag walls.",
     );
   }
   if (wantX) {
     rules.push(
       `- X: punchy; if content exceeds one post, put the full thread in xThread (1/, 2/, …) and put tweet 1 in "x".`,
+    );
+    rules.push(
+      "- X emphasis: optionally wrap one short phrase in **bold**. Keep the rest plain so the tweet stays readable.",
+    );
+    rules.push(
+      `- X should echo the same insight angle as the LinkedIn "${format.shortLabel}" format, compressed.`,
     );
   }
   rules.push("- Stay faithful to the video's ideas without inventing facts.");
@@ -94,6 +114,8 @@ Video title: ${input.title}
 Channel: ${input.channelName}
 Output language: ${language} (write ALL drafts in this language)
 Platforms to write for: ${platforms.join(", ")}
+Post format: ${format.name} (${format.id as PostFormatId})
+Format intent: ${format.description}
 
 Writing style to match:
 ${style}
@@ -117,14 +139,23 @@ ${rules.join("\n")}`,
 
   if (!wantLinkedIn) {
     result.linkedin = "";
+  } else {
+    // Paragraph spacing + Unicode bold/italic for LinkedIn paste-through.
+    result.linkedin = polishSocialDraft(result.linkedin, "linkedin");
   }
   if (!wantX) {
     result.x = "";
     result.xThread = [];
-  } else if (result.x.length > X_CHAR_LIMIT && result.xThread.length === 0) {
-    // Ensure single-tweet fits; otherwise force a thread from the long draft.
-    result.xThread = splitIntoThread(result.x);
-    result.x = result.xThread[0] ?? result.x.slice(0, X_CHAR_LIMIT - 1);
+  } else {
+    result.x = polishSocialDraft(result.x, "x");
+    result.xThread = result.xThread.map((tweet) =>
+      polishSocialDraft(tweet, "x"),
+    );
+    if (result.x.length > X_CHAR_LIMIT && result.xThread.length === 0) {
+      // Ensure single-tweet fits; otherwise force a thread from the long draft.
+      result.xThread = splitIntoThread(result.x);
+      result.x = result.xThread[0] ?? result.x.slice(0, X_CHAR_LIMIT - 1);
+    }
   }
 
   return result;

@@ -6,14 +6,23 @@ import { teamInvites, teamMembers, teams, users } from "@/db/schema";
 export async function ensureUserRow(
   userId: string,
   email?: string | null,
+  displayName?: string | null,
 ) {
   const db = getDb();
+  const trimmedName = displayName?.trim() || null;
   await db
     .insert(users)
-    .values({ id: userId, email: email ?? null })
+    .values({
+      id: userId,
+      email: email ?? null,
+      displayName: trimmedName,
+    })
     .onConflictDoUpdate({
       target: users.id,
-      set: { email: email ?? null },
+      set: {
+        ...(email !== undefined ? { email: email ?? null } : {}),
+        ...(trimmedName ? { displayName: trimmedName } : {}),
+      },
     });
 }
 
@@ -56,6 +65,34 @@ export async function requireTeamAdmin(
     throw new Error("Team admin access required");
   }
   return { role };
+}
+
+export async function requireTeamOwner(userId: string, teamId: string) {
+  const db = getDb();
+  const team = await db.query.teams.findFirst({
+    where: eq(teams.id, teamId),
+  });
+  if (!team) {
+    throw new Error("Team not found");
+  }
+  if (team.ownerUserId !== userId) {
+    throw new Error("Only the team owner can delete this team");
+  }
+  return team;
+}
+
+/** Owner-only hard delete. Clears active-team pointers, then cascades members/invites. */
+export async function deleteTeam(userId: string, teamId: string) {
+  const team = await requireTeamOwner(userId, teamId);
+  const db = getDb();
+
+  await db
+    .update(users)
+    .set({ activeTeamId: null })
+    .where(eq(users.activeTeamId, teamId));
+
+  await db.delete(teams).where(eq(teams.id, teamId));
+  return team;
 }
 
 export async function listUserTeams(userId: string) {

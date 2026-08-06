@@ -160,6 +160,32 @@ export function applyFormat(text: string, style: FormatStyle): string {
   }
 }
 
+/**
+ * Always apply styling (no toggle). Used when converting markdown markers
+ * from the model into paste-safe Unicode for LinkedIn / X.
+ */
+export function forceFormat(
+  text: string,
+  style: Extract<FormatStyle, "bold" | "italic">,
+): string {
+  if (!text) return text;
+  const plain = toPlainText(text);
+  if (style === "bold") {
+    return mapLetters(plain, BOLD);
+  }
+  return mapLetters(plain, ITALIC);
+}
+
+/** True if the string already contains mathematical bold/italic letters. */
+export function hasUnicodeEmphasis(text: string): boolean {
+  for (const char of text) {
+    if (Object.prototype.hasOwnProperty.call(REVERSE, char)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 /** Prefix non-empty lines with a bullet for list styling. */
 export function toggleBullets(text: string): string {
   const lines = text.split("\n");

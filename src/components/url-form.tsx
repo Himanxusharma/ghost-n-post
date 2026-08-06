@@ -1,14 +1,19 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { FormatPicker } from "@/components/format-picker";
+import { useToast } from "@/components/toast";
 import {
   LANGUAGE_LABELS,
   SUPPORTED_LANGUAGES,
   type SupportedLanguage,
 } from "@/lib/content";
+import {
+  DEFAULT_FORMAT_ID,
+  type PostFormatId,
+} from "@/lib/post-formats";
 import type { SocialPlatform } from "@/lib/validations";
 import { extractYoutubeId } from "@/lib/youtube-id";
-import { useToast } from "@/components/toast";
 
 type UrlFormProps = {
   disabled?: boolean;
@@ -18,6 +23,7 @@ type UrlFormProps = {
     applyStyle: boolean,
     language: SupportedLanguage,
     platforms: SocialPlatform[],
+    formatId: PostFormatId,
   ) => Promise<void>;
 };
 
@@ -32,6 +38,7 @@ export function UrlForm({
   const [wantLinkedIn, setWantLinkedIn] = useState(true);
   const [wantX, setWantX] = useState(true);
   const [language, setLanguage] = useState<SupportedLanguage>("auto");
+  const [formatId, setFormatId] = useState<PostFormatId>(DEFAULT_FORMAT_ID);
   const [submitting, setSubmitting] = useState(false);
   const { success, error: toastError } = useToast();
 
@@ -58,7 +65,7 @@ export function UrlForm({
     setError(null);
     setSubmitting(true);
     try {
-      await onSubmitUrl(trimmed, applyStyle, language, platforms);
+      await onSubmitUrl(trimmed, applyStyle, language, platforms, formatId);
       success("Generation started", "Pulling the video. Writing drafts…");
     } catch (err) {
       const message =
@@ -139,6 +146,12 @@ export function UrlForm({
           </label>
         </div>
       </fieldset>
+
+      <FormatPicker
+        value={formatId}
+        onChange={setFormatId}
+        disabled={disabled || submitting}
+      />
 
       <div className="url-options">
         <label className="style-toggle">

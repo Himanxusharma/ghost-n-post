@@ -7,6 +7,8 @@ import {
   isAccessDenied,
 } from "@/lib/auth/authorize";
 import { generateSocialPosts } from "@/lib/generation";
+import { resolveFormatId } from "@/lib/post-formats";
+import { regenerateRequestSchema } from "@/lib/validations";
 import { z } from "zod";
 
 export const runtime = "nodejs";
@@ -16,6 +18,7 @@ const postIdSchema = z.string().uuid();
 
 /**
  * Regenerate LinkedIn/X drafts for an existing post (up to 3 times per MVP).
+ * Optional body.formatId switches the LinkedIn structure template.
  */
 export async function POST(
   request: Request,
@@ -31,6 +34,27 @@ export async function POST(
         },
         { status: 400 },
       );
+    }
+
+    let formatIdFromBody: string | undefined;
+    try {
+      const body = await request.json();
+      const parsed = regenerateRequestSchema.safeParse(body ?? {});
+      if (!parsed.success) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: "INVALID_INPUT",
+              message: parsed.error.issues[0]?.message ?? "Invalid request",
+            },
+          },
+          { status: 400 },
+        );
+      }
+      formatIdFromBody = parsed.data.formatId;
+    } catch {
+      // Empty body is fine: keep the post's existing format.
     }
 
     const db = getDb();
@@ -117,6 +141,8 @@ export async function POST(
       }
     }
 
+    const formatId = resolveFormatId(formatIdFromBody ?? post.formatId);
+
     const generated = await generateSocialPosts({
       title: video.title ?? "Untitled video",
       channelName: video.channelName ?? "Unknown channel",
@@ -124,6 +150,7 @@ export async function POST(
       styleProfile,
       language: post.language,
       platforms: post.platforms ?? ["linkedin", "x"],
+      formatId,
     });
 
     const [updated] = await db
@@ -132,6 +159,7 @@ export async function POST(
         linkedinDraft: generated.linkedin,
         xDraft: generated.x,
         xThread: generated.xThread,
+        formatId,
         regenerateCount: post.regenerateCount + 1,
       })
       .where(eq(posts.id, id))
@@ -145,6 +173,7 @@ export async function POST(
         xDraft: updated.xDraft,
         xThread: updated.xThread,
         platforms: updated.platforms ?? ["linkedin", "x"],
+        formatId: updated.formatId,
         regenerateCount: updated.regenerateCount,
       },
     });

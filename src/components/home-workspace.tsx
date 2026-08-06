@@ -10,6 +10,7 @@ import { SiteHeader } from "./site-header";
 import { ResultPanelSkeleton } from "./ui-skeleton";
 import { UrlForm } from "./url-form";
 import type { SupportedLanguage } from "@/lib/content";
+import type { PostFormatId } from "@/lib/post-formats";
 import type { SocialPlatform } from "@/lib/validations";
 import { extractYoutubeId } from "@/lib/youtube-id";
 
@@ -47,6 +48,7 @@ type PostResponse = {
     xDraft: string;
     xThread: string[];
     platforms?: SocialPlatform[];
+    formatId?: string;
     regenerateCount: number;
     carouselSlides?: Array<{
       headline: string;
@@ -88,6 +90,7 @@ export function HomeWorkspace() {
     applyStyle: boolean,
     language: SupportedLanguage = "auto",
     platforms: SocialPlatform[] = ["linkedin", "x"],
+    formatId: PostFormatId = "hook-list",
   ) {
     setSubmitError(null);
     setFormBusy(true);
@@ -96,7 +99,13 @@ export function HomeWorkspace() {
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ youtubeUrl, applyStyle, language, platforms }),
+        body: JSON.stringify({
+          youtubeUrl,
+          applyStyle,
+          language,
+          platforms,
+          formatId,
+        }),
       });
       const json = await response.json();
       if (!json.success) {
@@ -154,9 +163,21 @@ export function HomeWorkspace() {
             <UrlForm
               key={deepLinkUrl || "url-form"}
               initialUrl={deepLinkUrl}
-              onSubmitUrl={async (youtubeUrl, applyStyle, language, platforms) => {
+              onSubmitUrl={async (
+                youtubeUrl,
+                applyStyle,
+                language,
+                platforms,
+                formatId,
+              ) => {
                 try {
-                  await onSubmitUrl(youtubeUrl, applyStyle, language, platforms);
+                  await onSubmitUrl(
+                    youtubeUrl,
+                    applyStyle,
+                    language,
+                    platforms,
+                    formatId,
+                  );
                 } catch (error) {
                   setSubmitError(
                     error instanceof Error
@@ -309,6 +330,7 @@ function ActiveJobPanel({
             xDraft={postQuery.data.xDraft}
             xThread={postQuery.data.xThread}
             platforms={postQuery.data.platforms ?? ["linkedin", "x"]}
+            formatId={postQuery.data.formatId}
             regenerateCount={postQuery.data.regenerateCount}
             carouselSlides={postQuery.data.carouselSlides ?? []}
             thumbnailUrl={postQuery.data.video?.thumbnailUrl}

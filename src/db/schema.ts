@@ -69,6 +69,8 @@ export const inviteStatusEnum = pgEnum("invite_status", [
 export const users = pgTable("users", {
   id: text("id").primaryKey(), // Clerk user id
   email: varchar("email", { length: 320 }),
+  /** Display name from Clerk (Google profile / full name). */
+  displayName: varchar("display_name", { length: 200 }),
   /** Active team for shared workspace context (Phase 4). */
   activeTeamId: uuid("active_team_id"),
   preferredLanguage: varchar("preferred_language", { length: 8 })
@@ -109,6 +111,8 @@ export const jobs = pgTable("jobs", {
   applyStyle: boolean("apply_style").default(true).notNull(),
   /** Output language for drafts; `auto` detects from transcript. */
   language: varchar("language", { length: 8 }).default("auto").notNull(),
+  /** LinkedIn structure template id (hook-list, numbered-takeaways, …). */
+  formatId: varchar("format_id", { length: 64 }).default("hook-list").notNull(),
   /** Which platforms to generate drafts for. */
   platforms: jsonb("platforms")
     .$type<Array<"linkedin" | "x">>()
@@ -140,6 +144,8 @@ export const posts = pgTable("posts", {
     .$type<Array<"linkedin" | "x">>()
     .default(["linkedin", "x"])
     .notNull(),
+  /** Structure template used for LinkedIn draft. */
+  formatId: varchar("format_id", { length: 64 }).default("hook-list").notNull(),
   regenerateCount: integer("regenerate_count").default(0).notNull(),
   language: varchar("language", { length: 8 }).default("en").notNull(),
   /** Phase 2: generated quote-card / carousel slides */

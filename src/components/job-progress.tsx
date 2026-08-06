@@ -16,9 +16,9 @@ type JobProgressProps = {
 };
 
 const STAGES = [
-  "Fetching video…",
-  "Transcribing…",
-  "Writing draft…",
+  { label: "Fetching video…", tone: "fetch" },
+  { label: "Transcribing…", tone: "transcribe" },
+  { label: "Writing draft…", tone: "write" },
 ] as const;
 
 export function JobProgress({
@@ -28,8 +28,10 @@ export function JobProgress({
   errorMessage,
   onRetry,
 }: JobProgressProps) {
-  const activeIndex = STAGES.findIndex((label) =>
-    stageLabel.toLowerCase().includes(label.split("…")[0].toLowerCase()),
+  const activeIndex = STAGES.findIndex((stage) =>
+    stageLabel
+      .toLowerCase()
+      .includes(stage.label.split("…")[0].toLowerCase()),
   );
 
   return (
@@ -75,16 +77,19 @@ export function JobProgress({
         </div>
       ) : (
         <ol className="stage-list">
-          {STAGES.map((label, index) => {
+          {STAGES.map((stage, index) => {
             const done = activeIndex > index || status === "complete";
             const current = activeIndex === index && status !== "complete";
+            const state = done ? "done" : current ? "current" : "pending";
             return (
               <li
-                key={label}
-                className={done ? "done" : current ? "current" : "pending"}
+                key={stage.label}
+                className={`stage-item stage-${stage.tone} ${state}`}
               >
                 <span className="stage-dot" aria-hidden />
-                {current ? stageLabel || label : label}
+                <span className="stage-label">
+                  {current ? stageLabel || stage.label : stage.label}
+                </span>
               </li>
             );
           })}

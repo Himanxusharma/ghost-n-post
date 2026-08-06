@@ -50,13 +50,47 @@ export function BatchWorkspace() {
   const [styleOpen, setStyleOpen] = useState(false);
   const [mode, setMode] = useState<"urls" | "channel">("channel");
   const [channelInput, setChannelInput] = useState("");
-  const [urlsText, setUrlsText] = useState("");
+  const [urls, setUrls] = useState<string[]>([]);
+  const [urlDraft, setUrlDraft] = useState("");
+  const [urlDraftError, setUrlDraftError] = useState<string | null>(null);
   const [maxVideos, setMaxVideos] = useState(5);
   const [language, setLanguage] = useState("auto");
   const [status, setStatus] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const { success, error: toastError } = useToast();
+
+  function addUrl() {
+    const trimmed = urlDraft.trim();
+    if (!trimmed) {
+      setUrlDraftError("Paste a YouTube URL first");
+      return;
+    }
+    if (!extractYoutubeId(trimmed)) {
+      setUrlDraftError("Enter a valid YouTube video URL");
+      return;
+    }
+    const videoId = extractYoutubeId(trimmed)!;
+    if (
+      urls.some((existing) => extractYoutubeId(existing) === videoId)
+    ) {
+      setUrlDraftError("That video is already in the list");
+      return;
+    }
+    if (urls.length >= 25) {
+      setUrlDraftError("Max 25 URLs per batch");
+      return;
+    }
+
+    setUrls((prev) => [...prev, trimmed]);
+    setUrlDraft("");
+    setUrlDraftError(null);
+    setFormError(null);
+  }
+
+  function removeUrl(index: number) {
+    setUrls((prev) => prev.filter((_, i) => i !== index));
+  }
 
   const listQuery = useQuery({
     queryKey: ["batches"],
@@ -114,11 +148,8 @@ export function BatchWorkspace() {
             }
           : {
               type: "urls",
-              urls: urlsText
-                .split("\n")
-                .map((line) => line.trim())
-                .filter(Boolean),
-              maxVideos,
+              urls,
+              maxVideos: urls.length,
               applyStyle: true,
               language,
             };
@@ -134,6 +165,8 @@ export function BatchWorkspace() {
     onSuccess: (data) => {
       setStatus("Batch queued.");
       setFormError(null);
+      setUrls([]);
+      setUrlDraft("");
       success("Batch queued", "Processing videos in the background.");
       queryClient.invalidateQueries({ queryKey: ["batches"] });
       router.replace(`/batch?id=${data.id}`);
@@ -168,12 +201,8 @@ export function BatchWorkspace() {
       return;
     }
     if (mode === "urls") {
-      const urls = urlsText
-        .split("\n")
-        .map((line) => line.trim())
-        .filter(Boolean);
       if (urls.length === 0) {
-        setFormError("Provide at least one YouTube URL");
+        setFormError("Add at least one YouTube URL");
         return;
       }
       const invalid = urls.find((url) => !extractYoutubeId(url));
@@ -182,7 +211,7 @@ export function BatchWorkspace() {
         return;
       }
     }
-    if (maxVideos < 1 || maxVideos > 25) {
+    if (mode === "channel" && (maxVideos < 1 || maxVideos > 25)) {
       setFormError("Max videos must be between 1 and 25");
       return;
     }
@@ -236,28 +265,93 @@ export function BatchWorkspace() {
               />
             </label>
           ) : (
-            <label>
-              YouTube URLs
-              <textarea
-                rows={6}
-                placeholder={"One YouTube URL per line"}
-                value={urlsText}
-                onChange={(event) => setUrlsText(event.target.value)}
-                required
-              />
-            </label>
+            <div className="batch-url-builder">
+              <span className="batch-url-builder-label">YouTube URLs</span>
+              <div className="batch-url-add-row">
+                <input
+                  type="url"
+                  inputMode="url"
+                  autoComplete="off"
+                  spellCheck={false}
+                  placeholder="https://youtube.com/watch?v=…"
+                  value={urlDraft}
+                  onChange={(event) => {
+                    setUrlDraft(event.target.value);
+                    if (urlDraftError) setUrlDraftError(null);
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      addUrl();
+                    }
+                  }}
+                  aria-label="YouTube URL to add"
+                  aria-invalid={Boolean(urlDraftError)}
+                  aria-describedby={
+                    urlDraftError ? "batch-url-draft-error" : undefined
+                  }
+                />
+                <button
+                  type="button"
+                  className="batch-url-add-btn"
+                  onClick={addUrl}
+                  disabled={urls.length >= 25}
+                >
+                  Add
+                </button>
+              </div>
+              {urlDraftError ? (
+                <p
+                  id="batch-url-draft-error"
+                  className="field-error"
+                  role="alert"
+                >
+                  {urlDraftError}
+                </p>
+              ) : null}
+
+              {urls.length > 0 ? (
+                <ul className="batch-url-list" aria-label="Queued YouTube URLs">
+                  {urls.map((url, index) => (
+                    <li key={`${extractYoutubeId(url) ?? url}-${index}`}>
+                      <span className="batch-url-index">{index + 1}</span>
+                      <span className="batch-url-value" title={url}>
+                        {url}
+                      </span>
+                      <button
+                        type="button"
+                        className="batch-url-remove"
+                        onClick={() => removeUrl(index)}
+                        aria-label={`Remove URL ${index + 1}`}
+                      >
+                        Remove
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="hint">Add links one by one. Max 25.</p>
+              )}
+              {urls.length > 0 ? (
+                <p className="hint">
+                  {urls.length} video{urls.length === 1 ? "" : "s"} queued
+                </p>
+              ) : null}
+            </div>
           )}
 
-          <label>
-            Max videos
-            <input
-              type="number"
-              min={1}
-              max={25}
-              value={maxVideos}
-              onChange={(event) => setMaxVideos(Number(event.target.value))}
-            />
-          </label>
+          {mode === "channel" ? (
+            <label>
+              Max videos
+              <input
+                type="number"
+                min={1}
+                max={25}
+                value={maxVideos}
+                onChange={(event) => setMaxVideos(Number(event.target.value))}
+              />
+            </label>
+          ) : null}
 
           <label>
             Language
@@ -273,7 +367,11 @@ export function BatchWorkspace() {
             </select>
           </label>
 
-          <button type="submit" disabled={createMutation.isPending}>
+          <button
+            type="submit"
+            className="btn-primary"
+            disabled={createMutation.isPending}
+          >
             {createMutation.isPending ? "Starting…" : "Start batch"}
           </button>
           {formError ? (

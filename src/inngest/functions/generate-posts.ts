@@ -25,13 +25,14 @@ export const generateVideoPosts = inngest.createFunction(
     retries: 2,
   },
   async ({ event, step }) => {
-    const { jobId, youtubeUrl, userId, applyStyle, language, teamId, platforms } =
+    const { jobId, youtubeUrl, userId, applyStyle, language, teamId, platforms, formatId } =
       event.data as {
         jobId: string;
         youtubeUrl: string;
         userId: string | null;
         applyStyle: boolean;
         language?: string;
+        formatId?: string;
         platforms?: Array<"linkedin" | "x">;
         teamId?: string | null;
         batchId?: string;
@@ -40,6 +41,7 @@ export const generateVideoPosts = inngest.createFunction(
     const requestedLanguage = language || "auto";
     const selectedPlatforms =
       platforms && platforms.length > 0 ? platforms : (["linkedin", "x"] as const);
+    const selectedFormatId = formatId || "hook-list";
 
     try {
       const metadata = await step.run("fetch-metadata", async () => {
@@ -176,9 +178,15 @@ export const generateVideoPosts = inngest.createFunction(
           styleProfile,
           language: outputLanguage,
           platforms: [...selectedPlatforms],
+          formatId: selectedFormatId,
         });
 
-        return { ...drafts, outputLanguage, platforms: [...selectedPlatforms] };
+        return {
+          ...drafts,
+          outputLanguage,
+          platforms: [...selectedPlatforms],
+          formatId: selectedFormatId,
+        };
       });
 
       const postId = await step.run("persist-result", async () => {
@@ -194,6 +202,7 @@ export const generateVideoPosts = inngest.createFunction(
             xDraft: generated.x,
             xThread: generated.xThread,
             platforms: generated.platforms,
+            formatId: generated.formatId,
             language: generated.outputLanguage,
           })
           .returning({ id: posts.id });
@@ -206,6 +215,7 @@ export const generateVideoPosts = inngest.createFunction(
             postId: post.id,
             videoId: metadata.videoId,
             language: generated.outputLanguage,
+            formatId: generated.formatId,
             updatedAt: new Date(),
           })
           .where(eq(jobs.id, jobId));

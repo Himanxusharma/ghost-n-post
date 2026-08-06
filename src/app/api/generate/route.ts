@@ -52,7 +52,8 @@ export async function POST(request: Request) {
       );
     }
 
-    const { youtubeUrl, applyStyle, language, teamId, platforms } = parsed.data;
+    const { youtubeUrl, applyStyle, language, teamId, platforms, formatId } =
+      parsed.data;
     const youtubeId = extractYoutubeId(youtubeUrl)!;
 
     // Clerk session or extension API token
@@ -136,6 +137,7 @@ export async function POST(request: Request) {
         youtubeUrl,
         applyStyle,
         language,
+        formatId,
         platforms,
         status: "queued",
         stageLabel: "Queued…",
@@ -151,6 +153,7 @@ export async function POST(request: Request) {
         userId: userId ?? null,
         applyStyle,
         language,
+        formatId,
         platforms,
         teamId: resolvedTeamId,
       },

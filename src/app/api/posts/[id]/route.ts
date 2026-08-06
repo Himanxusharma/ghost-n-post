@@ -66,6 +66,7 @@ export async function GET(
         xDraft: post.xDraft,
         xThread: post.xThread,
         platforms: post.platforms ?? ["linkedin", "x"],
+        formatId: post.formatId ?? "hook-list",
         regenerateCount: post.regenerateCount,
         carouselSlides: post.carouselSlides,
         carouselGeneratedAt: post.carouselGeneratedAt,

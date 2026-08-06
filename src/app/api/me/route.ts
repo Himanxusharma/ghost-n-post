@@ -31,16 +31,20 @@ export async function GET() {
       [clerkUser?.firstName, clerkUser?.lastName].filter(Boolean).join(" ") ||
       null;
 
-    await ensureUserRow(userId, email);
+    await ensureUserRow(userId, email, name);
 
     const db = getDb();
     const [row] = await db
       .update(users)
-      .set({ email })
+      .set({
+        email,
+        ...(name ? { displayName: name } : {}),
+      })
       .where(eq(users.id, userId))
       .returning({
         preferredLanguage: users.preferredLanguage,
         activeTeamId: users.activeTeamId,
+        displayName: users.displayName,
       });
 
     const [activeTeamId, teams] = await Promise.all([

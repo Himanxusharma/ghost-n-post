@@ -1,8 +1,16 @@
 import { z } from "zod";
+import {
+  DEFAULT_FORMAT_ID,
+  isPostFormatId,
+} from "@/lib/post-formats";
 import { extractYoutubeId } from "@/lib/youtube-id";
 
 export const socialPlatformSchema = z.enum(["linkedin", "x"]);
 export type SocialPlatform = z.infer<typeof socialPlatformSchema>;
+
+export const postFormatIdSchema = z
+  .string()
+  .refine(isPostFormatId, { message: "Unknown post format" });
 
 export const generateRequestSchema = z.object({
   youtubeUrl: z
@@ -14,6 +22,7 @@ export const generateRequestSchema = z.object({
       message: "Enter a valid YouTube video URL",
     }),
   applyStyle: z.boolean().optional().default(true),
+  formatId: postFormatIdSchema.optional().default(DEFAULT_FORMAT_ID),
   platforms: z
     .array(socialPlatformSchema)
     .min(1, "Select at least one platform")
@@ -55,3 +64,7 @@ export const styleProfileRequestSchema = z.object({
 });
 
 export type GenerateRequest = z.infer<typeof generateRequestSchema>;
+
+export const regenerateRequestSchema = z.object({
+  formatId: postFormatIdSchema.optional(),
+});

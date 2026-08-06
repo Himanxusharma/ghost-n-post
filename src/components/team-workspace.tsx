@@ -30,6 +30,9 @@ type TeamDetail = {
     id: string;
     userId: string;
     role: string;
+    email?: string | null;
+    displayName?: string | null;
+    label?: string;
   }>;
   invites: Array<{
     id: string;
@@ -171,6 +174,39 @@ export function TeamWorkspace() {
     },
   });
 
+  const deleteTeamMutation = useMutation({
+    mutationFn: async (team: { id: string; name: string }) => {
+      const response = await fetch(`/api/teams/${team.id}`, {
+        method: "DELETE",
+      });
+      const json = await response.json();
+      if (!json.success) throw new Error(json.error?.message ?? "Failed");
+      return json.data as { id: string; name: string };
+    },
+    onSuccess: (data) => {
+      if (selectedTeamId === data.id) {
+        setSelectedTeamId(null);
+      }
+      setLastInviteUrl(null);
+      setStatus(`Deleted ${data.name}`);
+      success("Team deleted", data.name);
+      queryClient.invalidateQueries({ queryKey: ["teams"] });
+      queryClient.removeQueries({ queryKey: ["team", data.id] });
+    },
+    onError: (error: Error) => {
+      setStatus(error.message);
+      toastError("Delete failed", error.message);
+    },
+  });
+
+  function confirmDeleteTeam(team: { id: string; name: string }) {
+    const ok = window.confirm(
+      `Delete “${team.name}”? This removes the workspace, members, and pending invites. Drafts stay in your history.`,
+    );
+    if (!ok) return;
+    deleteTeamMutation.mutate(team);
+  }
+
   const acceptInvite = useMutation({
     mutationFn: async (token: string) => {
       const response = await fetch("/api/teams/invites", {
@@ -245,11 +281,13 @@ export function TeamWorkspace() {
           <label>
             Team name
             <input
+              type="text"
               value={name}
               onChange={(event) => setName(event.target.value)}
               placeholder="Content studio"
               required
               minLength={2}
+              autoComplete="organization"
             />
           </label>
           <label>
@@ -265,7 +303,11 @@ export function TeamWorkspace() {
               ))}
             </select>
           </label>
-          <button type="submit" disabled={createTeam.isPending || !name.trim()}>
+          <button
+            type="submit"
+            className="btn-primary"
+            disabled={createTeam.isPending || !name.trim()}
+          >
             {createTeam.isPending ? "Creating…" : "Create team"}
           </button>
         </form>
@@ -315,6 +357,21 @@ export function TeamWorkspace() {
                       >
                         {isActive ? "Active" : "Set active"}
                       </button>
+                      {team.role === "owner" ? (
+                        <button
+                          type="button"
+                          className="btn-danger"
+                          onClick={() =>
+                            confirmDeleteTeam({
+                              id: team.id,
+                              name: team.name,
+                            })
+                          }
+                          disabled={deleteTeamMutation.isPending}
+                        >
+                          Delete
+                        </button>
+                      ) : null}
                     </div>
                   </li>
                 );
@@ -327,17 +384,50 @@ export function TeamWorkspace() {
 
         {detailQuery.data ? (
           <section className="team-section">
-            <h2>{detailQuery.data.team.name}</h2>
-            <p className="hint">
-              Members and pending invites for this workspace.
-            </p>
+            <header className="publish-header">
+              <div>
+                <h2>{detailQuery.data.team.name}</h2>
+                <p className="hint">
+                  Members and pending invites for this workspace.
+                </p>
+              </div>
+              {detailQuery.data.role === "owner" ? (
+                <button
+                  type="button"
+                  className="btn-danger"
+                  onClick={() =>
+                    confirmDeleteTeam({
+                      id: detailQuery.data.team.id,
+                      name: detailQuery.data.team.name,
+                    })
+                  }
+                  disabled={deleteTeamMutation.isPending}
+                >
+                  {deleteTeamMutation.isPending
+                    ? "Deleting…"
+                    : "Delete team"}
+                </button>
+              ) : null}
+            </header>
 
             <ul className="connection-list">
               {detailQuery.data.members.map((member) => (
                 <li key={member.id}>
                   <div>
-                    <h2>{member.userId}</h2>
-                    <p>{member.role}</p>
+                    <h2>
+                      {member.label ||
+                        member.displayName ||
+                        member.email ||
+                        "Team member"}
+                    </h2>
+                    <p>
+                      {member.role}
+                      {member.email &&
+                      (member.displayName || member.label) &&
+                      member.email !== member.displayName
+                        ? ` · ${member.email}`
+                        : ""}
+                    </p>
                   </div>
                 </li>
               ))}
@@ -358,6 +448,7 @@ export function TeamWorkspace() {
                 </label>
                 <button
                   type="submit"
+                  className="btn-primary"
                   disabled={invite.isPending || !inviteEmail.trim()}
                 >
                   {invite.isPending ? "Sending…" : "Create invite link"}

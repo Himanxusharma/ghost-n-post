@@ -3,8 +3,15 @@
 import { useState } from "react";
 import type { CarouselSlide } from "@/lib/content";
 import { languageDisplayName } from "@/lib/content";
+import { polishSocialDraft } from "@/lib/post-format";
+import {
+  DEFAULT_FORMAT_ID,
+  getPostFormat,
+  type PostFormatId,
+} from "@/lib/post-formats";
 import type { SocialPlatform } from "@/lib/validations";
 import { DraftEditor } from "./draft-editor";
+import { FormatPicker } from "./format-picker";
 import { PublishPanel } from "./publish-panel";
 import { ThumbPreview } from "./thumb-preview";
 import { useToast } from "./toast";
@@ -15,6 +22,7 @@ type PostResultProps = {
   xDraft: string;
   xThread: string[];
   platforms?: SocialPlatform[];
+  formatId?: string | null;
   regenerateCount?: number;
   carouselSlides?: CarouselSlide[];
   thumbnailUrl?: string | null;
@@ -30,6 +38,7 @@ export function PostResult({
   xDraft,
   xThread: initialThread,
   platforms = ["linkedin", "x"],
+  formatId: initialFormatId = DEFAULT_FORMAT_ID,
   regenerateCount = 0,
   carouselSlides: initialCarousel = [],
   thumbnailUrl,
@@ -46,9 +55,16 @@ export function PostResult({
   ]
     .filter(Boolean)
     .join(" + ");
-  const [linkedin, setLinkedin] = useState(linkedinDraft);
-  const [xPost, setXPost] = useState(xDraft);
-  const [xThread, setXThread] = useState(initialThread);
+  const [linkedin, setLinkedin] = useState(() =>
+    polishSocialDraft(linkedinDraft, "linkedin"),
+  );
+  const [xPost, setXPost] = useState(() => polishSocialDraft(xDraft, "x"));
+  const [xThread, setXThread] = useState(() =>
+    initialThread.map((tweet) => polishSocialDraft(tweet, "x")),
+  );
+  const [formatId, setFormatId] = useState<PostFormatId>(
+    getPostFormat(initialFormatId).id,
+  );
   const [carouselSlides, setCarouselSlides] =
     useState<CarouselSlide[]>(initialCarousel);
   const [customThumbnailUrl, setCustomThumbnailUrl] = useState(
@@ -161,22 +177,32 @@ export function PostResult({
     }
   }
 
-  async function regenerate() {
+  async function regenerate(nextFormatId: PostFormatId = formatId) {
     setBusy(true);
     setError(null);
     try {
       const response = await fetch(`/api/posts/${postId}/regenerate`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ formatId: nextFormatId }),
       });
       const json = await response.json();
       if (!json.success) {
         throw new Error(json.error?.message ?? "Regenerate failed");
       }
-      setLinkedin(json.data.linkedinDraft);
-      setXPost(json.data.xDraft);
-      setXThread(json.data.xThread ?? []);
+      setLinkedin(polishSocialDraft(json.data.linkedinDraft, "linkedin"));
+      setXPost(polishSocialDraft(json.data.xDraft, "x"));
+      setXThread(
+        (json.data.xThread ?? []).map((tweet: string) =>
+          polishSocialDraft(tweet, "x"),
+        ),
+      );
+      setFormatId(getPostFormat(json.data.formatId ?? nextFormatId).id);
       setRegens(json.data.regenerateCount);
-      success("Drafts regenerated");
+      success(
+        "Drafts regenerated",
+        getPostFormat(json.data.formatId ?? nextFormatId).name,
+      );
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Regenerate failed";
@@ -185,6 +211,15 @@ export function PostResult({
     } finally {
       setBusy(false);
     }
+  }
+
+  async function applyFormat(nextFormatId: PostFormatId) {
+    if (nextFormatId === formatId || busy || regenerationsLeft <= 0) {
+      setFormatId(nextFormatId);
+      return;
+    }
+    setFormatId(nextFormatId);
+    await regenerate(nextFormatId);
   }
 
   async function generateCustomThumbnail() {
@@ -280,6 +315,16 @@ export function PostResult({
           </button>
         </div>
       </header>
+
+      <FormatPicker
+        value={formatId}
+        onChange={(next) => {
+          void applyFormat(next);
+        }}
+        disabled={busy || regenerationsLeft <= 0}
+        compact
+        label="Try another format"
+      />
 
       {error ? (
         <p className="field-error" role="alert">
