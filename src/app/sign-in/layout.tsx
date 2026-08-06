@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Sign in",
-  description: "Sign in to Ghost n Post with Google to save drafts and publish.",
+  description: "Save the drafts. Keep the voice. Ship from here.",
   robots: { index: true, follow: true },
 };
 

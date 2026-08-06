@@ -124,7 +124,7 @@ export function StyleSettingsModal({ open, onClose }: StyleSettingsModalProps) {
       }
       queryClient.setQueryData(["style-profile"], json.data);
       setStatus("Voice profile saved. Future drafts will match it.");
-      success("Voice profile saved", "Future drafts will match it.");
+      success("Voice profile saved", "Next drafts will chase that cadence.");
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Failed to save";
@@ -193,14 +193,14 @@ export function StyleSettingsModal({ open, onClose }: StyleSettingsModalProps) {
         </header>
 
         <p className="modal-lead" id="style-lead">
-          Paste 3–5 of your LinkedIn or X posts, separated by a line with
-          three dashes (---). We&apos;ll extract a reusable style profile.
+          Feed it 3 to 5 of your real LinkedIn or X posts, separated by a line
+          with three dashes (---). We&apos;ll steal your cadence, not your words.
         </p>
 
         {!isSignedIn ? (
           <AuthGate
             title="Sign in to match your voice"
-            message="Continue with Google, then save 3–5 sample posts so drafts sound like you."
+            message="Continue with Google, then save 3 to 5 sample posts so drafts sound like you."
           />
         ) : (
           <form onSubmit={handleSave} className="style-form">

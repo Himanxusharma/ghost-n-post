@@ -73,7 +73,7 @@ export default function ScheduledPage() {
           <PageHeader
             stamp="Schedule"
             title="Scheduled & published"
-            description="Track immediate publishes and upcoming scheduled posts."
+            description="Queued to go live. Already out there. One list."
             backHref="/"
             backLabel="← New draft"
           />
@@ -145,8 +145,7 @@ export default function ScheduledPage() {
 
           {!listQuery.isLoading && listQuery.data?.length === 0 ? (
             <p className="hint">
-              No publications yet. Generate a draft, then use Publish now or
-              Schedule.
+              No publications yet. Draft something, then hit Publish now or Schedule.
             </p>
           ) : null}
         </div>

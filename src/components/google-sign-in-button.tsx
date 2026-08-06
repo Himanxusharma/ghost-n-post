@@ -74,7 +74,7 @@ export function GoogleSignInButton({
   }
 
   if (authLoaded && isSignedIn) {
-    return <p className="hint">You&apos;re signed in — redirecting…</p>;
+    return <p className="hint">You&apos;re signed in. Redirecting…</p>;
   }
 
   return (

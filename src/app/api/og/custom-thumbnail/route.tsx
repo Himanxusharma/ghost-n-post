@@ -11,7 +11,7 @@ export async function GET(request: Request) {
   const headline = (searchParams.get("headline") || "Your next post").slice(0, 90);
   const subtext = (
     searchParams.get("subtext") ||
-    "Turn videos into drafts that sound like you."
+    "Video in. Voice out."
   ).slice(0, 140);
 
   return new ImageResponse(

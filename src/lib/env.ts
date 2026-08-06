@@ -100,7 +100,7 @@ export function assertProductionEnv(): void {
   // Soft warning — publish features stay optional.
   if (!process.env.LINKEDIN_CLIENT_ID || !process.env.X_CLIENT_ID) {
     console.warn(
-      "[env] LinkedIn/X OAuth not fully configured — publish connections will stay disabled until set.",
+      "[env] LinkedIn/X OAuth not fully configured; publish connections will stay disabled until set.",
     );
   }
 }

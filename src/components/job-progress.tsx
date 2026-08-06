@@ -56,7 +56,7 @@ export function JobProgress({
             </p>
             {video.durationSeconds && video.durationSeconds > 60 * 60 ? (
               <p className="hint">
-                This video is over 60 minutes — processing may take a few
+                This video is over 60 minutes. Processing may take a few
                 minutes.
               </p>
             ) : null}

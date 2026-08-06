@@ -1,21 +1,21 @@
 # Ghost n Post
 
-Your AI ghostwriter for video. Turn any YouTube video into a ready-to-publish
-LinkedIn or X post — in your own voice.
+Video in. Voice out. Paste a YouTube link and walk away with LinkedIn or X
+drafts that sound like you wrote them.
 
 ## What it does
 
 1. Paste a YouTube link and choose platforms (LinkedIn, X, or both).
 2. We pull the transcript (captions or speech-to-text), extract the video's
    thumbnail, and analyze the content.
-3. We generate platform-ready drafts — optionally matched to your writing
+3. We generate platform-ready drafts, optionally matched to your writing
    style using sample posts you provide.
 4. You review, format, edit, export, or publish / schedule.
 
 ## Why
 
 Creators and founders publish YouTube content but rarely repurpose it into
-text posts — it's manual, slow, and the result doesn't sound like them.
+text posts. It's manual, slow, and the result doesn't sound like them.
 Ghost n Post automates the video → transcript → post pipeline and adds a
 style-matching layer so output doesn't read like generic AI copy.
 
@@ -34,7 +34,7 @@ style-matching layer so output doesn't read like generic AI copy.
 
 ## Architecture: One App, One Deploy
 
-Ghost n Post is a **single Next.js application** — frontend, API, and
+Ghost n Post is a **single Next.js application**: frontend, API, and
 background job processing all live in one repo and deploy to **one Vercel
 project**. There is no separate backend service, no queue/broker, and no
 worker fleet to host or keep alive elsewhere.
@@ -50,7 +50,7 @@ Next.js (App Router)
 ## Tech Stack (short version)
 
 - **App:** Next.js 16 (App Router) + TypeScript, Tailwind CSS
-- **Background jobs:** Inngest (durable step functions — no Redis/Celery)
+- **Background jobs:** Inngest (durable step functions, no Redis/Celery)
 - **Video/caption extraction:** `youtubei.js` (pure JS, no external binary)
 - **Transcription fallback:** Deepgram (URL-based, no local audio processing)
 - **LLM generation:** Groq (`llama-3.3-70b-versatile` by default)
@@ -58,7 +58,7 @@ Next.js (App Router)
 - **Storage:** Vercel Blob (thumbnails, transcripts)
 - **Auth:** Clerk (Google OAuth only)
 - **Rate limiting:** Upstash Redis + `@upstash/ratelimit`
-- **Hosting:** Vercel (single project — frontend, API, and jobs all included)
+- **Hosting:** Vercel (single project: frontend, API, and jobs all included)
 
 See `Docs/TRD.md` for full architecture and `Docs/SKILLS.md` for the detailed tech
 breakdown per component.
@@ -67,9 +67,9 @@ breakdown per component.
 
 | Doc | Purpose |
 |---|---|
-| `Docs/PRD.md` | Product Requirements — problem, users, goals, features, success metrics |
-| `Docs/FRD.md` | Functional Requirements — detailed feature specs, user flows, UI behavior |
-| `Docs/TRD.md` | Technical Requirements — architecture, data flow, APIs, infra |
+| `Docs/PRD.md` | Product Requirements: problem, users, goals, features, success metrics |
+| `Docs/FRD.md` | Functional Requirements: detailed feature specs, user flows, UI behavior |
+| `Docs/TRD.md` | Technical Requirements: architecture, data flow, APIs, infra |
 | `Docs/SKILLS.md` | Tech stack & skills required to build and maintain the product |
 
 ## Getting Started (local dev)
@@ -95,7 +95,7 @@ npm run inngest:dev
 `inngest:dev` targets `http://localhost:3010/api/inngest`. If you use another
 port, update that script and `NEXT_PUBLIC_APP_URL` to match.
 
-That's it — no second service, no Docker Compose, no separate worker
+That's it. No second service, no Docker Compose, no separate worker
 process to start.
 
 ### Environment Variables
@@ -105,7 +105,7 @@ GROQ_API_KEY=              # https://console.groq.com/keys
 GROQ_MODEL=                # optional; default llama-3.3-70b-versatile
 DATABASE_URL=              # Neon Postgres connection string
 BLOB_READ_WRITE_TOKEN=     # Vercel Blob
-INNGEST_DEV=1              # local only — omit in production
+INNGEST_DEV=1              # local only; omit in production
 INNGEST_EVENT_KEY=
 INNGEST_SIGNING_KEY=
 DEEPGRAM_API_KEY=            # optional but recommended for caption-less videos
@@ -125,7 +125,7 @@ UPSTASH_REDIS_REST_URL=
 UPSTASH_REDIS_REST_TOKEN=
 ```
 
-### Authentication (Clerk — Google only)
+### Authentication (Clerk, Google only)
 
 1. Create an app in the [Clerk dashboard](https://dashboard.clerk.com).
 2. Copy the publishable + secret keys into `.env.local`.
@@ -170,7 +170,7 @@ sync Inngest with the deployed `/api/inngest` route.
 
 ## Status
 
-Phase 1–4 implemented:
+Phase 1 to 4 implemented:
 
 - Phase 1: generate pipeline, style matching, history
 - Phase 2: LinkedIn/X publish, scheduling, carousel images
@@ -202,7 +202,7 @@ analytics are partner-gated).
 
 - Homepage language selector controls STT + generation language (`auto`
   detects from transcript).
-- `/team` — create a workspace, invite by email link, set active team
+- `/team`: create a workspace, invite by email link, set active team
   (new generations attach to the active team).
 - Post results → **Generate branded thumbnail** (Groq headline + OG image
   to Blob); optionally attach on publish.

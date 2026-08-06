@@ -50,7 +50,7 @@ export default function ExtensionPage() {
     },
     onSuccess: (data) => {
       setFreshToken(data.token);
-      success("API token created", "Copy it now — it won’t be shown again.");
+      success("API token created", "Copy it now. It won't be shown again.");
       queryClient.invalidateQueries({ queryKey: ["extension-tokens"] });
     },
     onError: (error: Error) => toastError("Token failed", error.message),
@@ -79,7 +79,7 @@ export default function ExtensionPage() {
           <PageHeader
             stamp="Extension"
             title="Chrome extension"
-            description="Install the local extension, paste your API base URL and token, then ghostwrite from any YouTube watch page."
+            description="Ghostwrite from the watch page. No tab hopping."
           >
             <button
               type="button"
@@ -117,7 +117,7 @@ export default function ExtensionPage() {
 
           {freshToken ? (
             <div className="token-reveal">
-              <p>Copy this token now — it won&apos;t be shown again.</p>
+              <p>Copy this token now. It won&apos;t be shown again.</p>
               <code>{freshToken}</code>
             </div>
           ) : null}
@@ -160,7 +160,7 @@ export default function ExtensionPage() {
           ) : null}
           {!tokensQuery.isLoading && tokensQuery.data?.length === 0 ? (
             <p className="hint">
-              No active tokens yet. Create one to use the extension.
+              No active tokens yet. Mint one and plug it into the extension.
             </p>
           ) : null}
         </div>

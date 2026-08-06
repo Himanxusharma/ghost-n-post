@@ -8,8 +8,8 @@ export default function NotFound() {
           <Link href="/" className="brand-sm">
             Ghost n Post
           </Link>
-          <h1>Page not found</h1>
-          <p>That link doesn&apos;t lead anywhere. Head home to generate a draft.</p>
+          <h1>This page ghosted you</h1>
+          <p>Wrong turn. Home still has drafts waiting.</p>
         </header>
         <Link href="/" className="btn-primary">
           Back to home

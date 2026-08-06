@@ -59,7 +59,7 @@ export default function HistoryPage() {
           <PageHeader
             stamp="History"
             title="History"
-            description="Past generations, newest first."
+            description="Yesterday's videos. Today's drafts."
             backHref="/"
             backLabel="← New draft"
           />
@@ -111,7 +111,7 @@ export default function HistoryPage() {
 
           {!historyQuery.isLoading && historyQuery.data?.length === 0 ? (
             <p className="hint">
-              No saved drafts yet. Generate one from the home page.
+              No drafts on file yet. Drop a link on the home page and start a folio.
             </p>
           ) : null}
         </div>

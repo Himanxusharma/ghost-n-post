@@ -26,7 +26,7 @@ export default async function SignUpPage({ searchParams }: SignUpPageProps) {
             Ghost n Post
           </Link>
           <p>
-            Create your account with Google to unlock history, style, and teams.
+            One Google click. Your ghostwriter starts remembering you.
           </p>
         </header>
 

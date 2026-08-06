@@ -30,7 +30,7 @@ export async function refreshBatchProgress(batchId: string) {
       failed === total
         ? "All videos failed"
         : failed > 0
-          ? `Done — ${completed} ok, ${failed} failed`
+          ? `Done: ${completed} ok, ${failed} failed`
           : "Batch complete";
   }
 

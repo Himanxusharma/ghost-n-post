@@ -1,7 +1,7 @@
 {
   "name": "Ghost n Post",
   "short_name": "Ghost n Post",
-  "description": "Turn any YouTube video into a ready-to-publish LinkedIn or X post in your own voice.",
+  "description": "Paste a YouTube link. Walk away with LinkedIn and X drafts that sound like you wrote them.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0e0e0c",

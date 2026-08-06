@@ -136,7 +136,7 @@ export function PublishPanel({
       const message =
         json.data.status === "scheduled"
           ? `Scheduled for ${new Date(json.data.scheduledFor).toLocaleString()}`
-          : "Publishing started — check Scheduled for status.";
+          : "Publishing started. Check Scheduled for status.";
       setStatus(message);
       success(
         json.data.status === "scheduled" ? "Post scheduled" : "Publish started",

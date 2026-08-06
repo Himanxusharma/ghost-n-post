@@ -22,7 +22,7 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
             Ghost n Post
           </Link>
           <p>
-            Sign in with Google to save drafts, match your voice, and publish.
+            Save the drafts. Keep the voice. Ship from here.
           </p>
           {params.error === "oauth_session" ? (
             <p className="field-error" role="alert">

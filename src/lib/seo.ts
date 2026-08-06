@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { getPublicAppUrl } from "@/lib/env";
 
 export const SITE_NAME = "Ghost n Post";
-export const SITE_TAGLINE = "AI ghostwriter for video";
+export const SITE_TAGLINE = "Video in. Voice out.";
 export const SITE_DESCRIPTION =
-  "Turn any YouTube video into a ready-to-publish LinkedIn or X post in your own voice.";
+  "Paste a YouTube link. Walk away with LinkedIn and X drafts that sound like you wrote them.";
 
 export function absoluteUrl(path = "/"): string {
   const base = getPublicAppUrl();
@@ -15,7 +15,7 @@ export function absoluteUrl(path = "/"): string {
 export const rootMetadata: Metadata = {
   metadataBase: new URL(getPublicAppUrl()),
   title: {
-    default: `${SITE_NAME} — ${SITE_TAGLINE}`,
+    default: `${SITE_NAME} · ${SITE_TAGLINE}`,
     template: `%s · ${SITE_NAME}`,
   },
   description: SITE_DESCRIPTION,
@@ -45,13 +45,13 @@ export const rootMetadata: Metadata = {
     type: "website",
     locale: "en_US",
     siteName: SITE_NAME,
-    title: `${SITE_NAME} — ${SITE_TAGLINE}`,
+    title: `${SITE_NAME} · ${SITE_TAGLINE}`,
     description: SITE_DESCRIPTION,
     url: absoluteUrl("/"),
   },
   twitter: {
     card: "summary_large_image",
-    title: `${SITE_NAME} — ${SITE_TAGLINE}`,
+    title: `${SITE_NAME} · ${SITE_TAGLINE}`,
     description: SITE_DESCRIPTION,
   },
   robots: {

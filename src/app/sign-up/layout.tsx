@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Sign up",
   description:
-    "Create a Ghost n Post account with Google to unlock history, style profiles, and teams.",
+    "One Google click. Your ghostwriter starts remembering you.",
   robots: { index: true, follow: true },
 };
 

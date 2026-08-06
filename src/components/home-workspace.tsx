@@ -144,10 +144,10 @@ export function HomeWorkspace() {
           </div>
           <p className="brand animate-fade delay-1">Ghost n Post</p>
           <h1 className="headline animate-fade delay-2">
-            Turn any YouTube video into LinkedIn and X drafts.
+            Steal the insight. Skip the rewatch.
           </h1>
           <p className="subhead animate-fade delay-3">
-            Paste a link. Get on-brand posts in your voice — ready to edit and publish.
+            Drop a YouTube link. LinkedIn and X drafts land in your voice, ready to tweak and ship.
           </p>
 
           <div className="hero-input animate-fade delay-4">

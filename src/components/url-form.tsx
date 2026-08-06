@@ -59,7 +59,7 @@ export function UrlForm({
     setSubmitting(true);
     try {
       await onSubmitUrl(trimmed, applyStyle, language, platforms);
-      success("Generation started", "Fetching video and writing drafts…");
+      success("Generation started", "Pulling the video. Writing drafts…");
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Something went wrong";

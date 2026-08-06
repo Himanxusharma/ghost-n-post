@@ -87,7 +87,7 @@ export default function AnalyticsPage() {
           <PageHeader
             stamp="Analytics"
             title="Analytics"
-            description="Generation volume and published post performance."
+            description="What you generated. What actually landed."
             backHref="/scheduled"
             backLabel="Publications →"
           >
@@ -174,7 +174,7 @@ export default function AnalyticsPage() {
           {!analyticsQuery.isLoading &&
           analyticsQuery.data?.publications.length === 0 ? (
             <p className="hint">
-              No published posts yet. Publish a draft, then refresh metrics.
+              No published posts yet. Ship a draft, then refresh the scoreboard.
             </p>
           ) : null}
         </div>

@@ -71,7 +71,7 @@ export function PostResult({
       await navigator.clipboard.writeText(value);
       setCopied(key);
       window.setTimeout(() => setCopied(null), 1600);
-      success("Copied", "Draft is on your clipboard.");
+      success("Copied", "It's on your clipboard.");
     } catch {
       toastError("Copy failed", "Clipboard permission was blocked.");
     }
@@ -394,7 +394,7 @@ export function PostResult({
                         value={tweet}
                         rows={3}
                         aria-label={`Thread part ${index + 1}`}
-                        hint="Format this post, then copy — pastes into X as-is."
+                        hint="Format this post, then copy. It pastes into X as-is."
                         onChange={(nextValue) => {
                           const next = [...xThread];
                           next[index] = nextValue;
@@ -453,7 +453,7 @@ export function PostResult({
           </div>
         ) : (
           <p className="hint">
-            Create a quote-card image from the draft for LinkedIn or X.
+            Create a quote card from the draft. Ready for LinkedIn or X.
           </p>
         )}
       </section>

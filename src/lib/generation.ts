@@ -11,7 +11,7 @@ const generatedPostsSchema = z.object({
 export type GeneratedPosts = z.infer<typeof generatedPostsSchema>;
 
 const DEFAULT_STYLE =
-  "Neutral, professional, clear. Prefer concrete insight over hype. Short paragraphs. No hashtag spam.";
+  "Neutral, professional, clear. Prefer concrete insight over hype. Short paragraphs. No hashtag spam. No em dashes.";
 
 const X_CHAR_LIMIT = 280;
 
@@ -76,13 +76,19 @@ export async function generateSocialPosts(input: {
     );
   }
   rules.push("- Stay faithful to the video's ideas without inventing facts.");
+  rules.push(
+    "- Never use em dashes (—) or en dashes (–). Use commas, periods, or colons instead.",
+  );
+  rules.push(
+    "- Sound human: concrete hooks, short lines, no corporate filler or 'In today's world' openers.",
+  );
   rules.push(`- Entire output must be in ${language}.`);
   rules.push(
     `- Only fill platforms requested: ${platforms.join(" + ")}. Leave others as empty string / [].`,
   );
 
   const parsed = await completeJson(
-    `You are a social ghostwriter. Paraphrase insights from the video — never copy the transcript verbatim.
+    `You are a social ghostwriter. Paraphrase insights from the video. Never copy the transcript verbatim.
 
 Video title: ${input.title}
 Channel: ${input.channelName}
@@ -136,7 +142,7 @@ export function normalizePlatforms(
 
 export async function extractStyleProfile(samples: string[]): Promise<string> {
   return completeText(
-    `Analyze these writing samples and produce a reusable style profile (tone, structure, length pattern, formatting habits, vocabulary quirks). Be specific enough to steer future generations. Return plain text only — no JSON.
+    `Analyze these writing samples and produce a reusable style profile (tone, structure, length pattern, formatting habits, vocabulary quirks). Be specific enough to steer future generations. Return plain text only, no JSON. Never use em dashes.
 
 Samples:
 ${samples.map((s, i) => `--- Sample ${i + 1} ---\n${s}`).join("\n\n")}`,

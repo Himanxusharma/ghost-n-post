@@ -75,7 +75,7 @@ export default function ConnectionsPage() {
           <PageHeader
             stamp="Connections"
             title="Connections"
-            description="Connect LinkedIn and X to publish or schedule drafts."
+            description="Wire up LinkedIn and X. Publish without the copy-paste dance."
             backHref="/"
             backLabel="← Back to drafts"
           />

@@ -28,10 +28,10 @@ export async function generateCarouselSlides(input: {
 }): Promise<CarouselSlide[]> {
   const style =
     input.styleProfile?.trim() ||
-    "Clear, professional, punchy. Short lines. No hashtag spam.";
+    "Clear, professional, punchy. Short lines. No hashtag spam. No em dashes.";
 
   const parsedRaw = await completeJson(
-    `Turn this LinkedIn draft into a 3–6 slide carousel for LinkedIn/X image posts.
+    `Turn this LinkedIn draft into a 3 to 6 slide carousel for LinkedIn/X image posts.
 
 Video/topic: ${input.title}
 Style: ${style}
@@ -48,7 +48,7 @@ Return JSON:
   ]
 }
 
-Rules: slide 1 is the hook, middle slides are insights, last slide is a soft CTA. No emojis overload.`,
+Rules: slide 1 is the hook, middle slides are insights, last slide is a soft CTA. No emoji overload. Never use em dashes (—) or en dashes (–).`,
     2048,
   );
 

@@ -1,4 +1,4 @@
-# Ghost n Post — Chrome extension
+# Ghost n Post Chrome extension
 
 Manifest V3 companion for Phase 3.
 
@@ -8,7 +8,7 @@ Manifest V3 companion for Phase 3.
 2. Chrome → `chrome://extensions` → Developer mode → **Load unpacked**.
 3. Select this `extension/` folder.
 4. Open extension **Options**, set:
-   - API base URL (e.g. `http://localhost:3010` — must match the running app)
+   - API base URL (e.g. `http://localhost:3010`; must match the running app)
    - API token (`gnp_…`)
 
 For production, set API base URL to your deployed origin

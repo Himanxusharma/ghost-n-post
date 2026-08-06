@@ -225,7 +225,7 @@ export function TeamWorkspace() {
           <PageHeader
             stamp="Team"
             title="Team"
-            description="Shared workspace for drafts, invites, and default language."
+            description="Shared voice. Shared queue. Fewer Slack pings."
             backHref="/"
             backLabel="← Back to drafts"
           />
@@ -321,7 +321,7 @@ export function TeamWorkspace() {
               })}
             </ul>
           ) : (
-            <p className="hint">No teams yet — create one above.</p>
+            <p className="hint">No teams yet. Create one above and invite the crew.</p>
           )}
         </section>
 

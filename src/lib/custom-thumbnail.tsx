@@ -35,7 +35,7 @@ ${input.linkedinDraft.slice(0, 2500)}
 Return JSON:
 { "headline": "max 8 words", "subtext": "max 16 words supporting line" }
 
-Write in ${language}. No hashtags. No emoji overload.`,
+Write in ${language}. No hashtags. No emoji overload. Never use em dashes. Make the headline punchy.`,
     512,
   );
 

@@ -198,7 +198,7 @@ export function BatchWorkspace() {
           <PageHeader
             stamp="Batch"
             title="Batch & channel"
-            description="Process multiple videos or a whole channel feed."
+            description="One playlist. Many drafts. Less babysitting."
             backHref="/"
             backLabel="← Single video"
           />
@@ -400,7 +400,7 @@ export function BatchWorkspace() {
             </ul>
           ) : null}
           {!listQuery.isLoading && listQuery.data?.length === 0 ? (
-            <p className="hint">No batches yet. Start one above.</p>
+            <p className="hint">No batches yet. Queue one above and let it cook.</p>
           ) : null}
         </section>
         </div>

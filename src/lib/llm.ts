@@ -47,7 +47,7 @@ export async function completeJson(prompt: string, maxTokens = 4096): Promise<un
     messages: [
       {
         role: "system",
-        content: "You are a careful assistant. Reply with valid JSON only — no markdown fences.",
+        content: "You are a careful assistant. Reply with valid JSON only, no markdown fences.",
       },
       { role: "user", content: prompt },
     ],
