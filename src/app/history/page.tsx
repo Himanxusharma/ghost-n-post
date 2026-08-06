@@ -6,6 +6,7 @@ import { SiteHeader } from "@/components/site-header";
 import { StyleSettingsModal } from "@/components/style-settings-modal";
 import { ThumbImage } from "@/components/thumb-image";
 import { ListSkeleton } from "@/components/ui-skeleton";
+import { useToast } from "@/components/toast";
 import { useState } from "react";
 
 type HistoryItem = {
@@ -20,6 +21,7 @@ type HistoryItem = {
 export default function HistoryPage() {
   const [styleOpen, setStyleOpen] = useState(false);
   const queryClient = useQueryClient();
+  const { success, error: toastError } = useToast();
 
   const historyQuery = useQuery({
     queryKey: ["history"],
@@ -41,7 +43,11 @@ export default function HistoryPage() {
         throw new Error(json.error?.message ?? "Failed to delete");
       }
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["history"] }),
+    onSuccess: () => {
+      success("Draft deleted");
+      queryClient.invalidateQueries({ queryKey: ["history"] });
+    },
+    onError: (error: Error) => toastError("Delete failed", error.message),
   });
 
   return (

@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/page-header";
 import { SiteHeader } from "@/components/site-header";
 import { StyleSettingsModal } from "@/components/style-settings-modal";
 import { ListSkeleton } from "@/components/ui-skeleton";
+import { useToast } from "@/components/toast";
 
 type TokenRow = {
   id: string;
@@ -20,6 +21,7 @@ export default function ExtensionPage() {
   const [styleOpen, setStyleOpen] = useState(false);
   const [freshToken, setFreshToken] = useState<string | null>(null);
   const queryClient = useQueryClient();
+  const { success, error: toastError } = useToast();
   const appUrl =
     typeof window !== "undefined"
       ? window.location.origin
@@ -48,8 +50,10 @@ export default function ExtensionPage() {
     },
     onSuccess: (data) => {
       setFreshToken(data.token);
+      success("API token created", "Copy it now — it won’t be shown again.");
       queryClient.invalidateQueries({ queryKey: ["extension-tokens"] });
     },
+    onError: (error: Error) => toastError("Token failed", error.message),
   });
 
   const revokeMutation = useMutation({
@@ -60,8 +64,11 @@ export default function ExtensionPage() {
       const json = await response.json();
       if (!json.success) throw new Error(json.error?.message ?? "Failed");
     },
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["extension-tokens"] }),
+    onSuccess: () => {
+      success("Token revoked");
+      queryClient.invalidateQueries({ queryKey: ["extension-tokens"] });
+    },
+    onError: (error: Error) => toastError("Revoke failed", error.message),
   });
 
   return (

@@ -3394,6 +3394,120 @@ mark {
   }
 }
 
+/* ========== Toasts (bottom-right / bottom-center on phones) ========== */
+
+.toast-viewport {
+  position: fixed;
+  z-index: 80;
+  right: max(0.85rem, env(safe-area-inset-right, 0px));
+  bottom: calc(var(--nav-offset) + 0.75rem);
+  left: auto;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-end;
+  gap: 0.55rem;
+  width: min(22rem, calc(100vw - 1.7rem));
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  width: 100%;
+  padding: 0.75rem 0.8rem;
+  border: 1px solid var(--line);
+  background: var(--paper-solid);
+  box-shadow: 3px 3px 0 #050504;
+  color: var(--ink);
+  animation: toast-in 220ms steps(3, end) both;
+}
+
+.toast-success {
+  border-color: var(--accent);
+  box-shadow: 3px 3px 0 var(--accent);
+}
+
+.toast-error {
+  border-color: var(--danger);
+  box-shadow: 3px 3px 0 var(--danger);
+}
+
+.toast-info {
+  border-color: var(--ink-soft);
+}
+
+.toast-body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.toast-title {
+  margin: 0;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
+.toast-success .toast-title {
+  color: var(--accent);
+}
+
+.toast-error .toast-title {
+  color: var(--danger);
+}
+
+.toast-copy {
+  margin: 0.3rem 0 0;
+  color: var(--ink-soft);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.toast-close {
+  flex-shrink: 0;
+  width: 1.6rem;
+  height: 1.6rem;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink-muted);
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0;
+  cursor: pointer;
+}
+
+.toast-close:hover {
+  color: var(--ink);
+  border-color: var(--ink-soft);
+  background: var(--highlight);
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 560px) {
+  .toast-viewport {
+    left: max(0.75rem, env(safe-area-inset-left, 0px));
+    right: max(0.75rem, env(safe-area-inset-right, 0px));
+    width: auto;
+    align-items: stretch;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-fade,
   .animate-rise,
@@ -3401,7 +3515,8 @@ mark {
   .stage-list li.current .stage-dot,
   .skeleton-line,
   .skeleton-block,
-  .icon-spin {
+  .icon-spin,
+  .toast {
     animation: none;
   }
 

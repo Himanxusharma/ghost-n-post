@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/page-header";
 import { SiteHeader } from "@/components/site-header";
 import { StyleSettingsModal } from "@/components/style-settings-modal";
 import { ListSkeleton } from "@/components/ui-skeleton";
+import { useToast } from "@/components/toast";
 
 type PublicationItem = {
   id: string;
@@ -22,6 +23,7 @@ type PublicationItem = {
 export default function ScheduledPage() {
   const [styleOpen, setStyleOpen] = useState(false);
   const queryClient = useQueryClient();
+  const { success, error: toastError } = useToast();
 
   const listQuery = useQuery({
     queryKey: ["publications"],
@@ -55,8 +57,11 @@ export default function ScheduledPage() {
         throw new Error(json.error?.message ?? "Cancel failed");
       }
     },
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["publications"] }),
+    onSuccess: () => {
+      success("Publication cancelled");
+      queryClient.invalidateQueries({ queryKey: ["publications"] });
+    },
+    onError: (error: Error) => toastError("Cancel failed", error.message),
   });
 
   return (

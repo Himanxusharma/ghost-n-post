@@ -9,6 +9,7 @@ import { SiteHeader } from "@/components/site-header";
 import { StyleSettingsModal } from "@/components/style-settings-modal";
 import { ThumbImage } from "@/components/thumb-image";
 import { ListSkeleton } from "@/components/ui-skeleton";
+import { useToast } from "@/components/toast";
 import {
   LANGUAGE_LABELS,
   SUPPORTED_LANGUAGES,
@@ -55,6 +56,7 @@ export function BatchWorkspace() {
   const [status, setStatus] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const queryClient = useQueryClient();
+  const { success, error: toastError } = useToast();
 
   const listQuery = useQuery({
     queryKey: ["batches"],
@@ -132,10 +134,14 @@ export function BatchWorkspace() {
     onSuccess: (data) => {
       setStatus("Batch queued.");
       setFormError(null);
+      success("Batch queued", "Processing videos in the background.");
       queryClient.invalidateQueries({ queryKey: ["batches"] });
       router.replace(`/batch?id=${data.id}`);
     },
-    onError: (error: Error) => setStatus(error.message),
+    onError: (error: Error) => {
+      setStatus(error.message);
+      toastError("Batch failed", error.message);
+    },
   });
 
   const cancelMutation = useMutation({
@@ -145,9 +151,11 @@ export function BatchWorkspace() {
       if (!json.success) throw new Error(json.error?.message ?? "Cancel failed");
     },
     onSuccess: () => {
+      success("Batch cancelled");
       queryClient.invalidateQueries({ queryKey: ["batches"] });
       queryClient.invalidateQueries({ queryKey: ["batch", detailId] });
     },
+    onError: (error: Error) => toastError("Cancel failed", error.message),
   });
 
   function onSubmit(event: FormEvent) {

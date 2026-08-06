@@ -7,6 +7,7 @@ import type { SocialPlatform } from "@/lib/validations";
 import { DraftEditor } from "./draft-editor";
 import { PublishPanel } from "./publish-panel";
 import { ThumbPreview } from "./thumb-preview";
+import { useToast } from "./toast";
 
 type PostResultProps = {
   postId: string;
@@ -61,13 +62,19 @@ export function PostResult({
   const [busy, setBusy] = useState(false);
   const [thumbBusy, setThumbBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { success, error: toastError } = useToast();
 
   const regenerationsLeft = Math.max(0, 3 - regens);
 
   async function copyText(key: string, value: string) {
-    await navigator.clipboard.writeText(value);
-    setCopied(key);
-    window.setTimeout(() => setCopied(null), 1600);
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(key);
+      window.setTimeout(() => setCopied(null), 1600);
+      success("Copied", "Draft is on your clipboard.");
+    } catch {
+      toastError("Copy failed", "Clipboard permission was blocked.");
+    }
   }
 
   function downloadMarkdown() {
@@ -90,6 +97,7 @@ export function PostResult({
     anchor.download = "ghost-n-post-draft.md";
     anchor.click();
     URL.revokeObjectURL(url);
+    success("Downloaded", "Markdown draft saved.");
   }
 
   function downloadPlainText() {
@@ -110,6 +118,7 @@ export function PostResult({
     anchor.download = "ghost-n-post-draft.txt";
     anchor.click();
     URL.revokeObjectURL(url);
+    success("Downloaded", "Text draft saved.");
   }
 
   async function downloadThumbnail(
@@ -141,12 +150,14 @@ export function PostResult({
       anchor.click();
       anchor.remove();
       URL.revokeObjectURL(objectUrl);
+      success("Thumbnail downloaded");
     } catch (err) {
-      setError(
+      const message =
         err instanceof Error
           ? err.message
-          : "Could not download thumbnail to this device",
-      );
+          : "Could not download thumbnail to this device";
+      setError(message);
+      toastError("Download failed", message);
     }
   }
 
@@ -165,8 +176,12 @@ export function PostResult({
       setXPost(json.data.xDraft);
       setXThread(json.data.xThread ?? []);
       setRegens(json.data.regenerateCount);
+      success("Drafts regenerated");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Regenerate failed");
+      const message =
+        err instanceof Error ? err.message : "Regenerate failed";
+      setError(message);
+      toastError("Regenerate failed", message);
     } finally {
       setBusy(false);
     }
@@ -185,10 +200,12 @@ export function PostResult({
       }
       setCustomThumbnailUrl(json.data.customThumbnailUrl);
       setCustomThumbnailHeadline(json.data.customThumbnailHeadline);
+      success("Custom thumbnail ready");
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Thumbnail generation failed",
-      );
+      const message =
+        err instanceof Error ? err.message : "Thumbnail generation failed";
+      setError(message);
+      toastError("Thumbnail failed", message);
     } finally {
       setThumbBusy(false);
     }

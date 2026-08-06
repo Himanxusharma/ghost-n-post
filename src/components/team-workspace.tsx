@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/page-header";
 import { SiteHeader } from "@/components/site-header";
 import { StyleSettingsModal } from "@/components/style-settings-modal";
 import { ListSkeleton } from "@/components/ui-skeleton";
+import { useToast } from "@/components/toast";
 import { LANGUAGE_LABELS, SUPPORTED_LANGUAGES } from "@/lib/content";
 
 type TeamRow = {
@@ -49,6 +50,7 @@ export function TeamWorkspace() {
   const searchParams = useSearchParams();
   const inviteToken = searchParams.get("invite");
   const queryClient = useQueryClient();
+  const { success, error: toastError } = useToast();
 
   const teamsQuery = useQuery({
     queryKey: ["teams"],
@@ -92,9 +94,13 @@ export function TeamWorkspace() {
       setName("");
       setSelectedTeamId(team.id);
       setStatus(`Created ${team.name}`);
+      success("Team created", team.name);
       queryClient.invalidateQueries({ queryKey: ["teams"] });
     },
-    onError: (error: Error) => setStatus(error.message),
+    onError: (error: Error) => {
+      setStatus(error.message);
+      toastError("Could not create team", error.message);
+    },
   });
 
   const setActive = useMutation({
@@ -110,9 +116,13 @@ export function TeamWorkspace() {
     },
     onSuccess: () => {
       setStatus("Active workspace updated");
+      success("Active workspace updated");
       queryClient.invalidateQueries({ queryKey: ["teams"] });
     },
-    onError: (error: Error) => setStatus(error.message),
+    onError: (error: Error) => {
+      setStatus(error.message);
+      toastError("Update failed", error.message);
+    },
   });
 
   const invite = useMutation({
@@ -131,9 +141,13 @@ export function TeamWorkspace() {
       setInviteEmail("");
       setLastInviteUrl(data.acceptUrl);
       setStatus(`Invite ready for ${data.email}`);
+      success("Invite ready", data.email);
       queryClient.invalidateQueries({ queryKey: ["team", activeTeamId] });
     },
-    onError: (error: Error) => setStatus(error.message),
+    onError: (error: Error) => {
+      setStatus(error.message);
+      toastError("Invite failed", error.message);
+    },
   });
 
   const revoke = useMutation({
@@ -148,9 +162,13 @@ export function TeamWorkspace() {
     },
     onSuccess: () => {
       setStatus("Invite revoked");
+      success("Invite revoked");
       queryClient.invalidateQueries({ queryKey: ["team", activeTeamId] });
     },
-    onError: (error: Error) => setStatus(error.message),
+    onError: (error: Error) => {
+      setStatus(error.message);
+      toastError("Revoke failed", error.message);
+    },
   });
 
   const acceptInvite = useMutation({
@@ -167,10 +185,14 @@ export function TeamWorkspace() {
     onSuccess: (data) => {
       setSelectedTeamId(data.teamId);
       setStatus("Invite accepted");
+      success("Invite accepted");
       queryClient.invalidateQueries({ queryKey: ["teams"] });
       window.history.replaceState({}, "", "/team");
     },
-    onError: (error: Error) => setStatus(error.message),
+    onError: (error: Error) => {
+      setStatus(error.message);
+      toastError("Invite failed", error.message);
+    },
   });
 
   useEffect(() => {

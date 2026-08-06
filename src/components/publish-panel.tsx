@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { AuthGate } from "@/components/auth-gate";
 import { ThumbImage } from "@/components/thumb-image";
+import { useToast } from "@/components/toast";
 import type { CarouselSlide } from "@/lib/content";
 
 type PublishPanelProps = {
@@ -48,6 +49,7 @@ export function PublishPanel({
   const [status, setStatus] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [carouselBusy, setCarouselBusy] = useState(false);
+  const { success, error: toastError } = useToast();
 
   // Shared cache key with /connections — avoids duplicate network calls.
   const accountsQuery = useQuery({
@@ -80,9 +82,14 @@ export function PublishPanel({
       }
       onCarouselGenerated(json.data.carouselSlides);
       setIncludeCarousel(true);
-      setStatus(`Generated ${json.data.carouselSlides.length} carousel slides.`);
+      const message = `Generated ${json.data.carouselSlides.length} carousel slides.`;
+      setStatus(message);
+      success("Carousel ready", message);
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Carousel failed");
+      const message =
+        error instanceof Error ? error.message : "Carousel failed";
+      setStatus(message);
+      toastError("Carousel failed", message);
     } finally {
       setCarouselBusy(false);
     }
@@ -126,13 +133,20 @@ export function PublishPanel({
         throw new Error(json.error?.message ?? "Publish failed");
       }
 
-      setStatus(
+      const message =
         json.data.status === "scheduled"
           ? `Scheduled for ${new Date(json.data.scheduledFor).toLocaleString()}`
-          : "Publishing started — check Scheduled for status.",
+          : "Publishing started — check Scheduled for status.";
+      setStatus(message);
+      success(
+        json.data.status === "scheduled" ? "Post scheduled" : "Publish started",
+        message,
       );
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Publish failed");
+      const message =
+        error instanceof Error ? error.message : "Publish failed";
+      setStatus(message);
+      toastError("Publish failed", message);
     } finally {
       setBusy(false);
     }

@@ -4,6 +4,7 @@ import { useAuth } from "@clerk/nextjs";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { AuthGate } from "@/components/auth-gate";
+import { useToast } from "@/components/toast";
 
 type StyleSettingsModalProps = {
   open: boolean;
@@ -22,6 +23,7 @@ export function StyleSettingsModal({ open, onClose }: StyleSettingsModalProps) {
   const [samplesText, setSamplesText] = useState("");
   const [status, setStatus] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const { success, error: toastError, info } = useToast();
   const closeRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -122,8 +124,12 @@ export function StyleSettingsModal({ open, onClose }: StyleSettingsModalProps) {
       }
       queryClient.setQueryData(["style-profile"], json.data);
       setStatus("Voice profile saved. Future drafts will match it.");
+      success("Voice profile saved", "Future drafts will match it.");
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Failed to save");
+      const message =
+        error instanceof Error ? error.message : "Failed to save";
+      setStatus(message);
+      toastError("Save failed", message);
     } finally {
       setBusy(false);
     }
@@ -141,6 +147,7 @@ export function StyleSettingsModal({ open, onClose }: StyleSettingsModalProps) {
       queryClient.setQueryData(["style-profile"], null);
       setSamplesText("");
       setStatus("Style profile reset.");
+      info("Style profile reset");
     } finally {
       setBusy(false);
     }
@@ -156,6 +163,9 @@ export function StyleSettingsModal({ open, onClose }: StyleSettingsModalProps) {
     const json = await response.json();
     if (json.success && json.data) {
       queryClient.setQueryData(["style-profile"], json.data);
+      success(
+        json.data.enabled ? "Voice matching on" : "Voice matching off",
+      );
     }
   }
 

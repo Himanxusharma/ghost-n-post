@@ -8,6 +8,7 @@ import {
 } from "@/lib/content";
 import type { SocialPlatform } from "@/lib/validations";
 import { extractYoutubeId } from "@/lib/youtube-id";
+import { useToast } from "@/components/toast";
 
 type UrlFormProps = {
   disabled?: boolean;
@@ -32,6 +33,7 @@ export function UrlForm({
   const [wantX, setWantX] = useState(true);
   const [language, setLanguage] = useState<SupportedLanguage>("auto");
   const [submitting, setSubmitting] = useState(false);
+  const { success, error: toastError } = useToast();
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -57,8 +59,12 @@ export function UrlForm({
     setSubmitting(true);
     try {
       await onSubmitUrl(trimmed, applyStyle, language, platforms);
+      success("Generation started", "Fetching video and writing drafts…");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+      setError(message);
+      toastError("Could not start", message);
     } finally {
       setSubmitting(false);
     }

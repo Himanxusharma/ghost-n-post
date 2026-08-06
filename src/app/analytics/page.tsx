@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/page-header";
 import { SiteHeader } from "@/components/site-header";
 import { StyleSettingsModal } from "@/components/style-settings-modal";
 import { AnalyticsSkeleton, ListSkeleton } from "@/components/ui-skeleton";
+import { useToast } from "@/components/toast";
 
 type AnalyticsPayload = {
   summary: {
@@ -44,6 +45,7 @@ type AnalyticsPayload = {
 export default function AnalyticsPage() {
   const [styleOpen, setStyleOpen] = useState(false);
   const queryClient = useQueryClient();
+  const { success, error: toastError, info } = useToast();
 
   const analyticsQuery = useQuery({
     queryKey: ["analytics"],
@@ -62,11 +64,17 @@ export default function AnalyticsPage() {
       if (!json.success) throw new Error(json.error?.message ?? "Sync failed");
     },
     onSuccess: () => {
+      info("Sync started", "Refreshing metrics…");
       window.setTimeout(
         () => queryClient.invalidateQueries({ queryKey: ["analytics"] }),
         2500,
       );
+      window.setTimeout(
+        () => success("Metrics refreshed"),
+        2800,
+      );
     },
+    onError: (error: Error) => toastError("Sync failed", error.message),
   });
 
   const summary = analyticsQuery.data?.summary;

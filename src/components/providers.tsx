@@ -4,6 +4,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
 import { AuthSync } from "@/components/auth-sync";
+import { ToastProvider } from "@/components/toast";
 import { clerkAppearance } from "@/lib/auth/clerk-appearance";
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -31,8 +32,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
       afterSignOutUrl="/"
     >
       <QueryClientProvider client={queryClient}>
-        <AuthSync />
-        {children}
+        <ToastProvider>
+          <AuthSync />
+          {children}
+        </ToastProvider>
       </QueryClientProvider>
     </ClerkProvider>
   );

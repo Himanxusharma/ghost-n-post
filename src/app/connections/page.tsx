@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/page-header";
 import { SiteHeader } from "@/components/site-header";
 import { StyleSettingsModal } from "@/components/style-settings-modal";
 import { ListSkeleton } from "@/components/ui-skeleton";
+import { useToast } from "@/components/toast";
 
 type AccountsResponse = {
   configured: { linkedin: boolean; x: boolean };
@@ -21,6 +22,7 @@ type AccountsResponse = {
 export default function ConnectionsPage() {
   const [styleOpen, setStyleOpen] = useState(false);
   const queryClient = useQueryClient();
+  const { success, error: toastError } = useToast();
 
   const accountsQuery = useQuery({
     queryKey: ["social-accounts"],
@@ -45,9 +47,16 @@ export default function ConnectionsPage() {
       if (!json.success) {
         throw new Error(json.error?.message ?? "Disconnect failed");
       }
+      return platform;
     },
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["social-accounts"] }),
+    onSuccess: (platform) => {
+      success(
+        "Disconnected",
+        platform === "linkedin" ? "LinkedIn removed." : "X removed.",
+      );
+      queryClient.invalidateQueries({ queryKey: ["social-accounts"] });
+    },
+    onError: (error: Error) => toastError("Disconnect failed", error.message),
   });
 
   const linkedin = accountsQuery.data?.accounts.find(
