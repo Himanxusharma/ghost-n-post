@@ -296,7 +296,7 @@ export function PostResult({
           <button
             type="button"
             className="tool-btn tool-btn-primary"
-            onClick={regenerate}
+            onClick={() => void regenerate()}
             disabled={busy || regenerationsLeft <= 0}
             title={
               regenerationsLeft <= 0
