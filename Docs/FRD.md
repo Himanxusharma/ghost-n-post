@@ -32,13 +32,15 @@ fixed bottom nav (not a dense dashboard).
 
 ## 2. Functional Requirements
 
-### FR-1: YouTube Link Input
+### FR-1: YouTube Link Input & Generation Auth Guard
 - User pastes a YouTube URL into a single text field on the homepage.
-- User selects **Generate for** platforms: LinkedIn, X, or both
-  (at least one required).
+- User selects **Generate for** platforms: LinkedIn, X, or both (at least one required).
 - Optional: **Write in my voice**, language selector (`auto` or explicit).
 - System validates URL format client-side before submission.
-- Invalid/unsupported URL shows inline error, no page reload.
+- **Sign-in Requirement for Generation**:
+  - `POST /api/generate` requires an authenticated user session (`userId`). Anonymous generation requests return `401 Unauthorized`.
+  - When an unauthenticated visitor clicks **Generate**, the system validates the URL, saves pending parameters (`youtubeUrl`, `applyStyle`, `language`, `platforms`, `formatId`) to `sessionStorage`, displays a toast notification ("Sign in required"), and redirects to `/sign-in`.
+  - Upon completing 1-click Google OAuth sign-in, the user returns to `/`, and `HomeWorkspace` automatically retrieves the pending parameters from `sessionStorage` and starts the generation pipeline seamlessly without re-pasting.
 
 ### FR-2: Video Metadata & Thumbnail Fetch
 - On valid link submit, system fetches: title, channel name, duration,
@@ -83,9 +85,11 @@ fixed bottom nav (not a dense dashboard).
 - If no style samples are provided, system uses a neutral, professional
   default tone.
 
-### FR-6: Output Actions
-- Copy-to-clipboard button per generated post / thread part.
-- Download option (plain text / markdown).
+### FR-6: Output Actions & Auth Gating
+- **Sign-in Requirement for Copy/Export**: User must be signed in to copy generated draft content or download Markdown/text drafts.
+- On click of Copy or Download when unsigned: system displays a clear toast notification ("Sign in required") and automatically redirects the user to `/sign-in` with `returnBackUrl` so they return seamlessly after authentication.
+- Copy-to-clipboard button per generated post / thread part (active for signed-in users).
+- Download option (plain text / markdown, active for signed-in users).
 - Thumbnail download (source + custom when generated).
 - Publish now / schedule (requires Google sign-in + LinkedIn/X connection).
 

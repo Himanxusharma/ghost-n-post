@@ -1,5 +1,7 @@
 "use client";
 
+import { useAuth } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { FormatPicker } from "@/components/format-picker";
 import { useToast } from "@/components/toast";
@@ -32,6 +34,9 @@ export function UrlForm({
   initialUrl = "",
   onSubmitUrl,
 }: UrlFormProps) {
+  const { isSignedIn } = useAuth();
+  const router = useRouter();
+
   const [url, setUrl] = useState(initialUrl);
   const [error, setError] = useState<string | null>(null);
   const [applyStyle, setApplyStyle] = useState(true);
@@ -59,6 +64,29 @@ export function UrlForm({
 
     if (platforms.length === 0) {
       setError("Select at least one platform");
+      return;
+    }
+
+    if (!isSignedIn) {
+      sessionStorage.setItem(
+        "ghost_pending_generation",
+        JSON.stringify({
+          youtubeUrl: trimmed,
+          applyStyle,
+          language,
+          platforms,
+          formatId,
+        }),
+      );
+      toastError(
+        "Sign in required",
+        "Please sign in with Google to start generation.",
+      );
+      const currentPath =
+        typeof window !== "undefined"
+          ? window.location.pathname + window.location.search
+          : "/";
+      router.push(`/sign-in?returnBackUrl=${encodeURIComponent(currentPath)}`);
       return;
     }
 

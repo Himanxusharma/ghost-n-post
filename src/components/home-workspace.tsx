@@ -1,5 +1,6 @@
 "use client";
 
+import { useAuth } from "@clerk/nextjs";
 import dynamic from "next/dynamic";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -66,6 +67,7 @@ type PostResponse = {
 };
 
 export function HomeWorkspace() {
+  const { isSignedIn, isLoaded } = useAuth();
   const searchParams = useSearchParams();
   const router = useRouter();
   const deepLinkUrl = searchParams.get("url") || "";
@@ -76,6 +78,27 @@ export function HomeWorkspace() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [formBusy, setFormBusy] = useState(false);
   const [jobRunning, setJobRunning] = useState(false);
+
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn) return;
+    const raw = sessionStorage.getItem("ghost_pending_generation");
+    if (!raw) return;
+    try {
+      sessionStorage.removeItem("ghost_pending_generation");
+      const parsed = JSON.parse(raw);
+      if (parsed?.youtubeUrl) {
+        void onSubmitUrl(
+          parsed.youtubeUrl,
+          parsed.applyStyle ?? true,
+          parsed.language ?? "auto",
+          parsed.platforms ?? ["linkedin", "x"],
+          parsed.formatId ?? "hook-list",
+        );
+      }
+    } catch {
+      sessionStorage.removeItem("ghost_pending_generation");
+    }
+  }, [isLoaded, isSignedIn]);
 
   function rememberJob(nextJobId: string) {
     setJobId(nextJobId);

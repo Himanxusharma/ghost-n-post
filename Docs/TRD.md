@@ -62,11 +62,13 @@ are replaced by **Inngest** — durable functions inside the same Next.js deploy
   `INNGEST_DEV`; set event + signing keys.
 
 ### 2.4 Video / captions
-- `youtubei.js` for metadata, thumbnails, captions (no yt-dlp / ffmpeg).
+- `youtubei.js` for metadata, thumbnails, and caption tracks (manual creator captions + auto-generated ASR tracks).
 
-### 2.5 Transcription fallback
-- Deepgram from a resolved remote audio URL when captions are missing.
-- Transcript stored in Vercel Blob.
+### 2.5 Transcription fallback (3-Tier Pipeline)
+- **Tier 1 (Free)**: `youtubei.js` caption tracks (manual + auto ASR).
+- **Tier 2 (1st STT Fallback — Free)**: Groq Whisper (`whisper-large-v3-turbo`) using the existing `GROQ_API_KEY`.
+- **Tier 3 (2nd STT Fallback)**: Deepgram (`nova-3` model) from resolved audio URL.
+- Transcripts are stored in Vercel Blob.
 
 ### 2.6 Post generation (LLM)
 - **Groq** (`llama-3.3-70b-versatile` default; `GROQ_MODEL` override).

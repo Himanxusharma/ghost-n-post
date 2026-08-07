@@ -61,7 +61,20 @@ export async function POST(request: Request) {
     const clerk = await auth();
     const userId = authed?.userId ?? clerk.userId ?? null;
 
-    const rateKey = userId ?? getClientIp(request);
+    if (!userId) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: "UNAUTHORIZED",
+            message: "Sign in required to generate posts.",
+          },
+        },
+        { status: 401, headers },
+      );
+    }
+
+    const rateKey = userId;
     const limit = await limitGenerate(rateKey);
 
     if (!limit.success) {
@@ -74,18 +87,6 @@ export async function POST(request: Request) {
           },
         },
         { status: 429, headers },
-      );
-    }
-
-    // Extension token auth is required when no Clerk session and bearer present failed
-    const hasBearer = Boolean(request.headers.get("authorization"));
-    if (hasBearer && !authed) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: { code: "UNAUTHORIZED", message: "Invalid extension token" },
-        },
-        { status: 401, headers },
       );
     }
 

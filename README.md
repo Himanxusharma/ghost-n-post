@@ -22,7 +22,7 @@ style-matching layer so output doesn't read like generic AI copy.
 ## Core Features
 
 - YouTube link → auto-fetched thumbnail (download + branded custom thumb)
-- Automatic transcript extraction (captions first, Deepgram STT fallback)
+- Automatic transcript extraction (3-Tier: YouTube manual + ASR auto-captions → Groq Whisper 1st STT fallback → Deepgram 2nd STT fallback)
 - LLM-generated LinkedIn and/or X drafts (platform checkboxes)
 - Unicode-safe draft formatting (bold/italic/etc. that pastes into LinkedIn/X)
 - Voice-matching via sample posts (style profile, reusable)
@@ -51,8 +51,9 @@ Next.js (App Router)
 
 - **App:** Next.js 16 (App Router) + TypeScript, Tailwind CSS
 - **Background jobs:** Inngest (durable step functions, no Redis/Celery)
-- **Video/caption extraction:** `youtubei.js` (pure JS, no external binary)
-- **Transcription fallback:** Deepgram (URL-based, no local audio processing)
+- **Video/caption extraction:** `youtubei.js` (manual + ASR auto-captions, pure JS)
+- **1st STT Fallback (Free):** Groq Whisper (`whisper-large-v3-turbo` via existing `GROQ_API_KEY`)
+- **2nd STT Fallback:** Deepgram (`nova-3`, URL-based)
 - **LLM generation:** Groq (`llama-3.3-70b-versatile` by default)
 - **Database:** Neon Postgres via the Vercel Postgres integration + Drizzle ORM
 - **Storage:** Vercel Blob (thumbnails, transcripts)

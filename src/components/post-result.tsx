@@ -1,5 +1,7 @@
 "use client";
 
+import { useAuth } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { CarouselSlide } from "@/lib/content";
 import { languageDisplayName } from "@/lib/content";
@@ -47,6 +49,9 @@ export function PostResult({
   language,
   videoTitle,
 }: PostResultProps) {
+  const { isSignedIn } = useAuth();
+  const router = useRouter();
+
   const showLinkedIn = platforms.includes("linkedin");
   const showX = platforms.includes("x");
   const platformLabel = [
@@ -82,7 +87,22 @@ export function PostResult({
 
   const regenerationsLeft = Math.max(0, 3 - regens);
 
+  function requireSignInForExport(actionLabel = "copy content"): boolean {
+    if (!isSignedIn) {
+      toastError("Sign in required", `Please sign in to ${actionLabel}.`);
+      const currentPath =
+        typeof window !== "undefined"
+          ? window.location.pathname + window.location.search
+          : "/";
+      router.push(`/sign-in?returnBackUrl=${encodeURIComponent(currentPath)}`);
+      return false;
+    }
+    return true;
+  }
+
   async function copyText(key: string, value: string) {
+    if (!requireSignInForExport("copy generated content")) return;
+
     try {
       await navigator.clipboard.writeText(value);
       setCopied(key);
@@ -94,6 +114,8 @@ export function PostResult({
   }
 
   function downloadMarkdown() {
+    if (!requireSignInForExport("download markdown draft")) return;
+
     const sections: string[] = [`# ${videoTitle ?? "Ghost n Post draft"}`];
     if (showLinkedIn) {
       sections.push(`## LinkedIn\n\n${linkedin}`);
@@ -117,6 +139,7 @@ export function PostResult({
   }
 
   function downloadPlainText() {
+    if (!requireSignInForExport("download plain text draft")) return;
     const content = [
       ...(showLinkedIn ? ["LINKEDIN", linkedin, ""] : []),
       ...(showX

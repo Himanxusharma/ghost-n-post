@@ -159,58 +159,66 @@ async function fetchCaptionsFromTracks(
       return null;
     }
 
-    const preferred =
-      tracks.find(
-        (t) => t.language_code === "en" && t.kind !== "asr",
-      ) ||
-      tracks.find((t) => String(t.language_code ?? "").startsWith("en")) ||
-      tracks.find((t) => t.kind !== "asr") ||
-      tracks[0];
+    const candidates = [
+      tracks.find((t) => t.language_code === "en" && t.kind !== "asr"),
+      tracks.find((t) => String(t.language_code ?? "").startsWith("en")),
+      tracks.find((t) => t.kind !== "asr"),
+      tracks.find((t) => t.kind === "asr"),
+      tracks[0],
+    ].filter(Boolean);
 
-    const baseUrl: string | undefined =
-      preferred?.base_url || preferred?.baseUrl || preferred?.url;
-    if (!baseUrl) return null;
+    for (const track of candidates) {
+      const baseUrl: string | undefined =
+        track?.base_url || track?.baseUrl || track?.url;
+      if (!baseUrl) continue;
 
-    const timedUrl = baseUrl.includes("fmt=")
-      ? baseUrl
-      : `${baseUrl}${baseUrl.includes("?") ? "&" : "?"}fmt=json3`;
+      const timedUrl = baseUrl.includes("fmt=")
+        ? baseUrl
+        : `${baseUrl}${baseUrl.includes("?") ? "&" : "?"}fmt=json3`;
 
-    const response = await fetch(timedUrl, {
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
-      },
-    });
-    if (!response.ok) return null;
+      try {
+        const response = await fetch(timedUrl, {
+          headers: {
+            "User-Agent":
+              "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+          },
+        });
+        if (!response.ok) continue;
 
-    const payload = (await response.json()) as {
-      events?: Array<{
-        tStartMs?: number;
-        segs?: Array<{ utf8?: string }>;
-      }>;
-    };
-
-    const parsed = (payload.events ?? [])
-      .map((event) => {
-        const text = (event.segs ?? [])
-          .map((seg) => seg.utf8 ?? "")
-          .join("")
-          .replace(/\n/g, " ")
-          .trim();
-        return {
-          start: String(event.tStartMs ?? 0),
-          text,
+        const payload = (await response.json()) as {
+          events?: Array<{
+            tStartMs?: number;
+            segs?: Array<{ utf8?: string }>;
+          }>;
         };
-      })
-      .filter((segment) => segment.text.length > 0);
 
-    if (parsed.length === 0) return null;
+        const parsed = (payload.events ?? [])
+          .map((event) => {
+            const text = (event.segs ?? [])
+              .map((seg) => seg.utf8 ?? "")
+              .join("")
+              .replace(/\n/g, " ")
+              .trim();
+            return {
+              start: String(event.tStartMs ?? 0),
+              text,
+            };
+          })
+          .filter((segment) => segment.text.length > 0);
 
-    return {
-      text: parsed.map((s) => s.text).join(" "),
-      source: "captions",
-      segments: parsed,
-    };
+        if (parsed.length > 0) {
+          return {
+            text: parsed.map((s) => s.text).join(" "),
+            source: "captions",
+            segments: parsed,
+          };
+        }
+      } catch {
+        continue;
+      }
+    }
+
+    return null;
   } catch {
     return null;
   }
