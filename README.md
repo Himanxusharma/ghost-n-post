@@ -168,14 +168,15 @@ For publishing, register LinkedIn and X developer apps and set callbacks to:
 Also allow your production origin in the Clerk dashboard (Google OAuth) and
 sync Inngest with the deployed `/api/inngest` route.
 
-## Status
+## Status (Version 2.2 — Production Verified)
 
-Phase 1 to 4 implemented:
+Phase 1 to 4 implemented, build-hardened, and visually verified:
 
 - Phase 1: generate pipeline, style matching, history
 - Phase 2: LinkedIn/X publish, scheduling, carousel images
 - Phase 3: Chrome extension, batch/channel mode, analytics
 - Phase 4: multi-language drafts, team workspaces, custom thumbnails
+- Build & UX: Vercel production build hardened (`npm run build` verified), strict TypeScript handler safety, responsive Tactile Brutalist design system (`globals.css` design tokens, mobile/tablet/desktop verified)
 
 Configure `.env.local` and run `npm run db:push` before exercising the full
 flow. Load the unpacked extension from `extension/` (see

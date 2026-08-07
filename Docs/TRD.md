@@ -1,7 +1,7 @@
 # Technical Requirements Document (TRD)
 
 **Product:** Ghost n Post
-**Version:** 2.1 (Shipped — Single-Deploy Vercel Architecture)
+**Version:** 2.2 (Shipped & Production Verified — Single-Deploy Vercel Architecture)
 
 ---
 

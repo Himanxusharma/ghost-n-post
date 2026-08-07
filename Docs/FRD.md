@@ -1,11 +1,11 @@
 # Functional Requirements Document (FRD)
 
 **Product:** Ghost n Post
-**Version:** 2.1 (Shipped — Single-Deploy Architecture)
+**Version:** 2.2 (Shipped & Production Verified — Single-Deploy Architecture)
 
 ---
 
-## 1. UI Philosophy
+## 1. UI Philosophy & Design System
 
 Focused draft studio — one primary input, clear output, secondary tools in a
 fixed bottom nav (not a dense dashboard).
@@ -14,11 +14,16 @@ fixed bottom nav (not a dense dashboard).
 - Style profile via **Match my voice** modal; other tools on dedicated
   routes (`/history`, `/batch`, `/analytics`, `/connections`, `/scheduled`,
   `/team`, `/extension`).
-- Visual system: **tactile brutalism × archival indexing** — dark paper
-  surface, 1px borders, hard offset shadows, lime accent (`#e8ff47`),
-  Space Grotesk / IBM Plex Sans / IBM Plex Mono.
-- Responsive: stacked forms and single-column drafts on small screens;
-  loading skeletons for slow navigations / fetches.
+- Visual system: **Tactile Brutalism × Archival Indexing**
+  - Surfaces: Dark paper (`--paper: #0e0e0c`), card surface (`--paper-2: #161613`), solid modal (`--paper-solid: #1a1a16`).
+  - Text & Accents: Off-white ink (`--ink: #f2efe6`), signature lime accent (`--accent: #e8ff47`), stamp accent (`--stamp: #ff5c35`).
+  - Borders & Shadows: Crisp 1px border (`--line: #3d3c35`), hard offset shadow (`--shadow: 3px 3px 0 #050504`), focus ring (`--focus-outline: 1px solid var(--accent)`).
+  - Typography: `Space Grotesk` (Headings/Display), `IBM Plex Sans` (Body text), `IBM Plex Mono` (Labels, stamps, counts, codes).
+- Responsive Viewport Adaptations:
+  - **Desktop (>1024px)**: 2-column side-by-side Draft Studio grid, centered fixed bottom nav bar.
+  - **Tablet (768px-1024px)**: Single-column draft grid, vertical form stacking, drawer menu toggle (`.nav-toggle`).
+  - **Mobile (375px-560px)**: 3.25rem (~52px) touch targets, sheet modals (`align-items: flex-end`, `max-height: 88vh`), full-width toast notifications with safe-area insets.
+  - **Small Mobile (<380px)**: Stacked platform checkboxes, fluid `clamp()` brand typography.
 - Because the whole app is a single Next.js deployment, the landing page is
   server-rendered — no separate API round trip needed just to paint the
   input field.

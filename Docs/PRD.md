@@ -1,8 +1,8 @@
 # Product Requirements Document (PRD)
 
 **Product:** Ghost n Post
-**Version:** 2.1
-**Status:** Phase 1–4 shipped (iterate / harden)
+**Version:** 2.2
+**Status:** Phase 1–4 shipped & production verified (Vercel build hardened, responsive audit complete)
 
 ---
 
@@ -54,11 +54,12 @@ product itself as simply as possible: one repo, one deploy, on Vercel.
 - Platform selection (LinkedIn / X)
 - Thumbnail auto-fetch + download; custom branded thumbnail generation
 - Style-matching via sample posts
-- Copy / markdown / text export; Unicode formatting editor
+- Copy / markdown / text export; Unicode mathematical formatting layer (bold/italic paste-through)
 - Publish + schedule to LinkedIn/X
 - History, batch/channel mode, analytics, Chrome extension, teams
 - Multi-language generation (`auto` + explicit locales)
-- Responsive UI + loading skeletons; single Vercel deploy
+- Responsive Tactile Brutalist UI (verified across Desktop >1024px, Tablet 768px-1024px, Mobile 375px-560px, and Small Mobile <380px)
+- Production Vercel single-project deployment hardened (`npm run build` verified)
 
 ### Future / open
 
