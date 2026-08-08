@@ -56,21 +56,33 @@ export function FormatPicker({
                   <img src={format.imageSrc} alt="" />
                 ) : (
                   <div className="format-card-mock">
-                    <span className="format-card-mock-avatar" />
-                    <div className="format-card-mock-lines">
-                      {format.previewLines.map((line) => (
-                        <span key={line}>{line}</span>
+                    <div className="format-card-mock-author">
+                      <span className="mock-avatar" />
+                      <span className="mock-author-line" />
+                    </div>
+                    <div className="format-card-mock-content">
+                      {format.previewLines.map((line, idx) => (
+                        <span key={line} className={idx === 0 ? "mock-hook" : "mock-body"}>
+                          {line}
+                        </span>
                       ))}
                     </div>
                   </div>
                 )}
               </div>
-              <span className="format-card-name">{format.shortLabel}</span>
+              <div className="format-card-footer">
+                <span className="format-card-tag">{format.shortLabel}</span>
+                {selected ? <span className="format-card-dot" /> : null}
+              </div>
             </button>
           );
         })}
       </div>
       <p className="format-picker-hint">
+        <span className="hint-symbol">✦</span>{" "}
+        <strong>
+          {POST_FORMATS.find((f) => f.id === value)?.name ?? "Hook + list"}:
+        </strong>{" "}
         {POST_FORMATS.find((format) => format.id === value)?.description ??
           POST_FORMATS.find((format) => format.id === DEFAULT_FORMAT_ID)
             ?.description}
