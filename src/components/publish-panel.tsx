@@ -165,91 +165,29 @@ export function PublishPanel({
 
   return (
     <section className="publish-panel">
-      <header className="publish-header">
-        <h3>Publish</h3>
-        <a href="/connections" className="text-link">
-          Manage connections
-        </a>
-      </header>
-
-      <div className="platform-toggle" role="group" aria-label="Platform">
-        {availablePlatforms.includes("linkedin") ? (
-          <button
-            type="button"
-            className={platform === "linkedin" ? "active" : ""}
-            aria-pressed={platform === "linkedin"}
-            onClick={() => setPlatform("linkedin")}
-          >
-            LinkedIn
-          </button>
-        ) : null}
-        {availablePlatforms.includes("x") ? (
-          <button
-            type="button"
-            className={platform === "x" ? "active" : ""}
-            aria-pressed={platform === "x"}
-            onClick={() => setPlatform("x")}
-          >
-            X
-          </button>
-        ) : null}
+      <div className="v2-lock-banner">
+        <span className="v2-badge">🔒 V2 FEATURE</span>
+        <p>
+          Direct social publishing & calendar scheduling will unlock in{" "}
+          <strong>Version 2.0</strong>. For now, use the 1-click{" "}
+          <strong>Copy</strong> buttons above to paste your drafts into LinkedIn & X!
+        </p>
       </div>
 
-      {!connected ? (
-        <p className="hint">
-          {platform === "linkedin" ? "LinkedIn" : "X"} is not connected.{" "}
-          <a
-            href={`/api/social/${platform === "linkedin" ? "linkedin" : "x"}/start?returnTo=/`}
-            className="text-link"
-          >
-            Connect now
-          </a>
-        </p>
-      ) : (
-        <p className="hint">
-          Connected as{" "}
-          {accounts.find((a) => a.platform === platform)?.displayName ||
-            accounts.find((a) => a.platform === platform)?.platformUsername}
-        </p>
-      )}
-
       <div className="publish-options">
-        <label>
-          <input
-            type="checkbox"
-            checked={includeCarousel}
-            onChange={(event) => {
-              setIncludeCarousel(event.target.checked);
-              if (event.target.checked) setIncludeCustomThumbnail(false);
-            }}
-            disabled={carouselSlides.length === 0}
-          />
-          Attach carousel / image
-        </label>
-        <label>
-          <input
-            type="checkbox"
-            checked={includeCustomThumbnail}
-            onChange={(event) => {
-              setIncludeCustomThumbnail(event.target.checked);
-              if (event.target.checked) setIncludeCarousel(false);
-            }}
-            disabled={!customThumbnailUrl}
-          />
-          Attach custom thumbnail
-        </label>
         <button
           type="button"
-          className="btn-quiet"
+          className="tool-btn"
           onClick={generateCarousel}
           disabled={carouselBusy}
         >
           {carouselBusy
             ? "Generating slides…"
-            : carouselSlides.length
-              ? "Regenerate carousel"
-              : "Generate carousel"}
+            : carouselSlides.length > 0
+              ? "Regenerate carousel slides"
+              : "Generate carousel slides"}
         </button>
+        {status ? <p className="hint">{status}</p> : null}
       </div>
 
       {carouselSlides.length > 0 ? (
@@ -265,59 +203,6 @@ export function PublishPanel({
             />
           ))}
         </div>
-      ) : null}
-
-      <label className="style-toggle">
-        <input
-          type="checkbox"
-          checked={scheduleMode}
-          onChange={(event) => setScheduleMode(event.target.checked)}
-        />
-        Schedule for later
-      </label>
-
-      {scheduleMode ? (
-        <label className="schedule-field">
-          Schedule for
-          <input
-            type="datetime-local"
-            className="schedule-input"
-            value={scheduledFor}
-            onChange={(event) => setScheduledFor(event.target.value)}
-            min={new Date().toISOString().slice(0, 16)}
-            required
-          />
-        </label>
-      ) : null}
-
-      <div className="publish-actions">
-        <button
-          type="button"
-          onClick={publish}
-          disabled={busy || !connected}
-        >
-          {busy
-            ? "Working…"
-            : scheduleMode
-              ? "Schedule post"
-              : "Publish now"}
-        </button>
-        <a href="/scheduled" className="text-link">
-          View scheduled
-        </a>
-      </div>
-
-      {status ? (
-        <p
-          className={
-            /fail|error|invalid|required|connect/i.test(status)
-              ? "field-error"
-              : "hint"
-          }
-          role={/fail|error|invalid|required/i.test(status) ? "alert" : undefined}
-        >
-          {status}
-        </p>
       ) : null}
     </section>
   );

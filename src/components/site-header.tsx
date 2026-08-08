@@ -69,12 +69,15 @@ export function SiteHeader({ onOpenStyle }: SiteHeaderProps) {
             <Link href="/history" onClick={closeMenu}>
               History
             </Link>
+            {/* Scheduled & Connections hidden for V1 — Locked for V2 release */}
+            {/*
             <Link href="/scheduled" onClick={closeMenu}>
               Scheduled
             </Link>
             <Link href="/connections" onClick={closeMenu}>
               Connections
             </Link>
+            */}
             <Link href="/team" onClick={closeMenu}>
               Team
             </Link>
@@ -104,11 +107,6 @@ export function SiteHeader({ onOpenStyle }: SiteHeaderProps) {
                     label="History"
                     labelIcon={<MenuDot />}
                     href="/history"
-                  />
-                  <UserButton.Link
-                    label="Connections"
-                    labelIcon={<MenuDot />}
-                    href="/connections"
                   />
                   <UserButton.Link
                     label="Team"

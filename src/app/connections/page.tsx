@@ -73,95 +73,25 @@ export default function ConnectionsPage() {
       <main id="main-content" className="history-page" tabIndex={-1}>
         <div className="page-panel">
           <PageHeader
-            stamp="Connections"
-            title="Connections"
-            description="Wire up LinkedIn and X. Publish without the copy-paste dance."
+            stamp="V2 Feature"
+            title="Social connections"
+            description="Direct OAuth platform connections for automated publishing will unlock in Version 2.0."
             backHref="/"
-            backLabel="← Back to drafts"
+            backLabel="← New draft"
           />
 
-          {accountsQuery.isLoading ? (
-            <ListSkeleton rows={2} withThumb={false} />
-          ) : null}
-          {accountsQuery.isError ? (
-            <p className="field-error" role="alert">
-              {(accountsQuery.error as Error).message}
+          <div className="v2-lock-card">
+            <span className="v2-badge">🔒 LOCKED FOR V2</span>
+            <h3>Social Account Connections Launching in Version 2.0</h3>
+            <p>
+              Direct LinkedIn & X account connections for automated social posting will unlock in V2. For now, generate posts in the Studio and use 1-click <strong>Copy</strong> to post directly!
             </p>
-          ) : null}
-          {disconnect.isError ? (
-            <p className="field-error" role="alert">
-              {(disconnect.error as Error).message}
-            </p>
-          ) : null}
-
-          {!accountsQuery.isLoading ? (
-            <ul className="connection-list">
-              <li>
-                <div>
-                  <h2>LinkedIn</h2>
-                  {linkedin ? (
-                    <p>
-                      Connected as{" "}
-                      {linkedin.displayName || linkedin.platformUsername}
-                    </p>
-                  ) : (
-                    <p className="hint">
-                      {accountsQuery.data?.configured.linkedin
-                        ? "Not connected"
-                        : "Set LINKEDIN_CLIENT_ID / SECRET to enable"}
-                    </p>
-                  )}
-                </div>
-                {linkedin ? (
-                  <button
-                    type="button"
-                    className="btn-quiet"
-                    onClick={() => disconnect.mutate("linkedin")}
-                  >
-                    Disconnect
-                  </button>
-                ) : (
-                  <a
-                    className="nav-cta"
-                    href="/api/social/linkedin/start?returnTo=/connections"
-                  >
-                    Connect
-                  </a>
-                )}
-              </li>
-
-              <li>
-                <div>
-                  <h2>X</h2>
-                  {x ? (
-                    <p>Connected as @{x.platformUsername || x.displayName}</p>
-                  ) : (
-                    <p className="hint">
-                      {accountsQuery.data?.configured.x
-                        ? "Not connected"
-                        : "Set X_CLIENT_ID / SECRET to enable"}
-                    </p>
-                  )}
-                </div>
-                {x ? (
-                  <button
-                    type="button"
-                    className="btn-quiet"
-                    onClick={() => disconnect.mutate("x")}
-                  >
-                    Disconnect
-                  </button>
-                ) : (
-                  <a
-                    className="nav-cta"
-                    href="/api/social/x/start?returnTo=/connections"
-                  >
-                    Connect
-                  </a>
-                )}
-              </li>
-            </ul>
-          ) : null}
+            <div style={{ marginTop: "1rem" }}>
+              <a href="/" className="tool-btn tool-btn-primary">
+                ← Return to Draft Studio
+              </a>
+            </div>
+          </div>
         </div>
       </main>
 

@@ -71,83 +71,25 @@ export default function ScheduledPage() {
       <main id="main-content" className="history-page" tabIndex={-1}>
         <div className="page-panel">
           <PageHeader
-            stamp="Schedule"
+            stamp="V2 Feature"
             title="Scheduled & published"
-            description="Queued to go live. Already out there. One list."
+            description="Direct social account scheduling and queue management will unlock in Version 2.0."
             backHref="/"
             backLabel="← New draft"
           />
 
-          {listQuery.isLoading ? <ListSkeleton rows={4} /> : null}
-          {listQuery.isError ? (
-            <p className="field-error">
-              {(listQuery.error as Error).message}
+          <div className="v2-lock-card">
+            <span className="v2-badge">🔒 LOCKED FOR V2</span>
+            <h3>Post Scheduling is Launching in Version 2.0</h3>
+            <p>
+              Direct calendar scheduling and automated posting to LinkedIn & X will unlock in V2. For now, generate posts in the Studio and use 1-click <strong>Copy</strong> to post directly!
             </p>
-          ) : null}
-
-          {!listQuery.isLoading ? (
-            <ul className="history-list">
-              {(listQuery.data ?? []).map((item) => (
-                <li key={item.id} className="publication-row">
-                  <div className="thumb-placeholder platform-badge">
-                    {item.platform === "linkedin" ? "in" : "𝕏"}
-                  </div>
-                  <div className="history-meta">
-                    <h2>
-                      {item.platform.toUpperCase()} · {item.status}
-                    </h2>
-                    <p>{item.contentSnippet}…</p>
-                    {item.scheduledFor ? (
-                      <time dateTime={item.scheduledFor}>
-                        Scheduled {new Date(item.scheduledFor).toLocaleString()}
-                      </time>
-                    ) : item.publishedAt ? (
-                      <time dateTime={item.publishedAt}>
-                        Published {new Date(item.publishedAt).toLocaleString()}
-                      </time>
-                    ) : (
-                      <time dateTime={item.createdAt}>
-                        Created {new Date(item.createdAt).toLocaleString()}
-                      </time>
-                    )}
-                    {item.errorMessage ? (
-                      <p className="field-error">{item.errorMessage}</p>
-                    ) : null}
-                    {item.externalUrl ? (
-                      <p>
-                        <a
-                          href={item.externalUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-link"
-                        >
-                          Open on{" "}
-                          {item.platform === "linkedin" ? "LinkedIn" : "X"}
-                        </a>
-                      </p>
-                    ) : null}
-                  </div>
-                  {item.status === "scheduled" || item.status === "pending" ? (
-                    <button
-                      type="button"
-                      className="btn-quiet"
-                      onClick={() => cancelMutation.mutate(item.id)}
-                    >
-                      Cancel
-                    </button>
-                  ) : (
-                    <span />
-                  )}
-                </li>
-              ))}
-            </ul>
-          ) : null}
-
-          {!listQuery.isLoading && listQuery.data?.length === 0 ? (
-            <p className="hint">
-              No publications yet. Draft something, then hit Publish now or Schedule.
-            </p>
-          ) : null}
+            <div style={{ marginTop: "1rem" }}>
+              <a href="/" className="tool-btn tool-btn-primary">
+                ← Return to Draft Studio
+              </a>
+            </div>
+          </div>
         </div>
       </main>
 

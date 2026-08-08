@@ -88,13 +88,16 @@ fixed bottom nav (not a dense dashboard).
 - If no style samples are provided, system uses a neutral, professional
   default tone.
 
-### FR-6: Output Actions & Auth Gating
+### FR-6: Output Actions & V2 Locked Features
 - **Sign-in Requirement for Copy/Export**: User must be signed in to copy generated draft content or download Markdown/text drafts.
-- On click of Copy or Download when unsigned: system displays a clear toast notification ("Sign in required") and automatically redirects the user to `/sign-in` with `returnBackUrl` so they return seamlessly after authentication.
+- On click of Copy or Download when unsigned: system displays a clear toast notification ("Sign in required") and automatically redirects the user to `/sign-in`.
 - Copy-to-clipboard button per generated post / thread part (active for signed-in users).
 - Download option (plain text / markdown, active for signed-in users).
-- Thumbnail download (source + custom when generated).
-- Publish now / schedule (requires Google sign-in + LinkedIn/X connection).
+- Thumbnail download (source + custom quote card when generated).
+- **V2 Feature Lock (Scheduled & Connections)**:
+  - Direct social account connections (`/connections`) and scheduled calendar queue management (`/scheduled`) are locked for **Version 2.0**.
+  - All underlying code, database schemas, OAuth endpoints, and API functions are preserved intact for V2.
+  - UI navigation links in `SiteHeader` and `PublishPanel` display clean `🔒 V2 FEATURE` notices.
 
 ### FR-7: Error & Edge Case Handling
 - Unsupported video (age-restricted, private, region-locked): clear error
