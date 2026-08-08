@@ -41,7 +41,7 @@ export function FormatPicker({
       const current = track.scrollLeft;
       const diff = targetScroll - current;
       if (Math.abs(diff) > 0.5) {
-        track.scrollLeft += diff * 0.22;
+        track.scrollLeft += diff * 0.25;
         animId = requestAnimationFrame(smoothScroll);
       } else {
         track.scrollLeft = targetScroll;
@@ -52,8 +52,10 @@ export function FormatPicker({
     const handleWheel = (e: WheelEvent) => {
       if (e.deltaY !== 0) {
         e.preventDefault();
-        const maxScroll = track.scrollWidth - track.clientWidth;
-        targetScroll = Math.max(0, Math.min(maxScroll, targetScroll + e.deltaY * 1.25));
+        const maxScroll = Math.max(0, track.scrollWidth - track.clientWidth);
+        // Sync target with actual scroll position if new gesture starts
+        const currentTarget = animId !== null ? targetScroll : track.scrollLeft;
+        targetScroll = Math.max(0, Math.min(maxScroll, currentTarget + e.deltaY * 1.35));
         if (!animId) {
           animId = requestAnimationFrame(smoothScroll);
         }

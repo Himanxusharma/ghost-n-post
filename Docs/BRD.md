@@ -36,8 +36,8 @@ Core principle guiding every decision below: **we can't make everything paid, bu
 | Tier | Price | Credits/month | Who it's for |
 |---|---|---|---|
 | **Free** | ₹0 | 20 | Trying the product, light/occasional use |
-| **Pro** | ₹1999/mo or ₹19,999/yr (list) | 200 | Regular creators, consistent posting cadence |
-| **Custom / Team** | Sales-assisted, unlisted price | Pooled/negotiated | Agencies, multi-seat teams, high-volume or SSO/compliance needs |
+| **Pro** | ₹999/mo or ₹11,988/yr (list) | 200 | Regular creators, consistent posting cadence |
+| **Enterprise / Agency** | Sales-assisted, unlisted price | Pooled/negotiated | Agencies, multi-seat teams, high-volume or SSO/compliance needs |
 
 ### 4.2 Credit Definition & Duration-Based Weighting
 
@@ -55,15 +55,15 @@ A credit represents processing unit effort (video duration, transcript length, a
 
 This chunk-based model aligns user credit consumption directly with LLM token usage and processing effort, preserving healthy unit margins across both short clips and long podcasts.
 
-### 4.3 Custom / Team Trigger
+### 4.3 Enterprise / Agency Trigger
 
-Self-serve Pro is capped at individual use. Route to Custom/Team (sales-assisted) when a prospect needs any of:
+Self-serve Pro is capped at individual use. Route to Enterprise / Agency ("Request Sales Callback") when a prospect needs any of:
 - More than 1 seat / shared team credit pool
-- Volume beyond what a reasonable multiple of Pro would sanely cover
+- Volume beyond what a reasonable multiple of Pro would cover
 - SSO or procurement/compliance requirements
 - Dedicated support or custom analytics
 
-**Pricing stays unlisted** — the pricing page states the trigger explicitly ("Need more than this? Talk to us") without publishing a starting number, keeping deal terms flexible for sales.
+**Pricing stays unlisted** — the pricing page states the trigger explicitly ("Request Sales Callback") without publishing a starting number, keeping deal terms flexible for sales callback.
 
 ### 4.4 Overage & Rollover Rules
 
@@ -72,47 +72,49 @@ Self-serve Pro is capped at individual use. Route to Custom/Team (sales-assisted
 
 ### 4.5 Multi-Currency Pricing
 
-- Top currencies (recommend starting with USD, EUR, GBP, AED — the highest-signal non-India currencies based on likely audience) are supported at launch, in addition to INR.
-- **Interchange/payment-processing cost is not uniform across currencies or card networks** — international cards, currency conversion, and cross-border transaction fees all carry a higher cost than a domestic INR transaction. Displayed prices per currency should build in this cost, not be a naive FX-rate conversion of ₹1999.
-- Recommend: set each currency's price as a rounded, locally-natural number (e.g., $24/mo, not $23.87/mo) derived from ₹1999 *plus* the interchange/processing margin for that payment corridor, reviewed periodically as FX rates move rather than repriced in real time.
-- This needs a concrete rate card before launch — see §12 (Open Questions).
+- Top currencies (USD, EUR, GBP) are supported at launch, in addition to INR.
+- Displayed prices per currency build in cross-border transaction fees rather than naive FX conversion.
+- Rate Card:
+  - **INR**: ₹999/mo (List) | ₹299/mo (Offer - 3 mos) || ₹11,988/yr (List) | ₹2,999/yr (Offer - 1 yr)
+  - **USD**: $12/mo (List) | $3.99/mo (Offer - 3 mos) || $144/yr (List) | $39/yr (Offer - 1 yr)
+  - **EUR**: €11/mo (List) | €3.49/mo (Offer - 3 mos) || €132/yr (List) | €35/yr (Offer - 1 yr)
+  - **GBP**: £9.99/mo (List) | £2.99/mo (Offer - 3 mos) || £119/yr (List) | £29/yr (Offer - 1 yr)
 
 ### 4.6 Feature Gating by Tier
 
 Upgrading to Pro should not be justified by credit volume alone — certain capabilities are Pro-exclusive so the upgrade case is also a *capability* case, not just a *rationing* case.
 
-| Feature | Free | Pro | Custom/Team |
+| Feature | Free | Pro | Enterprise / Agency |
 |---|---|---|---|
 | YouTube → draft generation | ✓ (1 platform per generation) | ✓ (LinkedIn + X together) | ✓ |
 | Thumbnail auto-fetch & download | ✓ | ✓ | ✓ |
+| Chrome extension access | ✓ | ✓ | ✓ |
 | Style/voice matching ("write in my voice") | ✗ | ✓ | ✓ |
 | X thread auto-split | ✗ | ✓ | ✓ |
 | Custom branded thumbnail generation | ✗ | ✓ | ✓ |
-| Publish / schedule to LinkedIn & X | ✗ | ✓ | ✓ |
 | History | Last 5 generations | Unlimited | Unlimited |
 | Batch / channel processing | ✗ | ✓ | ✓ |
-| Analytics dashboard | ✗ | ✓ | ✓ + team-level rollups |
-| Chrome extension access | ✗ | ✓ | ✓ |
-| Team workspaces / shared credit pool | ✗ | ✗ | ✓ |
 | Priority generation queue | ✗ | ✓ | ✓ |
+| Publish / schedule to LinkedIn & X | ✗ | ✓ (Coming soon) | ✓ (Coming soon) |
+| Analytics dashboard | ✗ | ✓ (Coming soon) | ✓ + Team Rollups (Coming soon) |
+| Team workspaces / shared credit pool | ✗ | ✗ | ✓ |
 | Credit top-up purchase | ✗ | ✓ | Negotiated |
 
-This table is the source of truth for what engineering feature-flags by tier — update it before implementation, not after.
+This table is the source of truth for engineering feature-flags by tier.
 
 ## 5. Pre-Launch Offer
 
-Reframed from a generic "launch discount" into a **pre-launch offer** — explicitly for early adopters, not an open-ended promotional mechanic. Three stages, in order:
+Reframed from a generic "launch discount" into a **pre-launch offer** — explicitly for early adopters:
 
-1. **Trial (card required, no charge until conversion, cancel anytime):** instead of a day-based window, the trial is **credit-based** — every trialing user gets **50 bonus trial credits** on top of/instead of the standard free allowance, usable on Pro-tier features. The trial converts to a paid cycle when the credits are exhausted (or the user upgrades manually before that).
-   - **Card is required upfront to start the trial.** This is a deliberate trade-off: it reduces trial-abuse risk (see §9) at the cost of some signup friction, which is acceptable given the audience is already-engaged existing users.
-   - **One trial per user, ever.** If a user cancels during or after the trial, they are not eligible to trial again — tie eligibility to both account and payment-method fingerprint, not just email, to prevent a cancel-and-resignup loop.
-2. **Discounted first paid cycle:** once trial credits are exhausted (or the user upgrades directly), the account converts into the pre-launch discounted price for that one billing cycle.
-3. **List price from the second cycle onward:** every renewal after the first discounted cycle bills at full list price, with advance notice (below).
+1. **Trial (card required, no charge until conversion, cancel anytime):** every trialing user gets **50 bonus trial credits** on top of standard free allowance.
+2. **Discounted first paid period:**
+   - **Monthly Plan:** ₹299/mo for the first 3 months (70% OFF), then ₹999/mo from month 4.
+   - **Annual Plan:** ₹2,999 for year 1 (75% OFF), then ₹11,988/yr from year 2.
 
-| Plan | Trial | List Price | Discounted 1st Cycle (post-trial) | Discount | Reverts To |
+| Plan | Trial | List Price | Pre-Launch Offer | Discount | Reverts To |
 |---|---|---|---|---|---|
-| Pro Monthly | 50 trial credits, card required | ₹1999/mo | ₹799 (month 1) | 60% off | ₹1999/mo from month 2 |
-| Pro Annual | 50 trial credits, card required | ₹19,999/yr | ₹5,999 (year 1) | 70% off | ₹19,999/yr from year 2 |
+| Pro Monthly | 50 trial credits, card required | ₹999/mo | ₹299/mo (first 3 months) | 70% off | ₹999/mo from month 4 |
+| Pro Annual | 50 trial credits, card required | ₹11,988/yr | ₹2,999 (year 1) | 75% off | ₹11,988/yr from year 2 |
 
 **Eligibility (cohort cap only):** The pre-launch offer is available to **the first 500 users only** — this cohort naturally includes the existing early-adopter base (since they'll be first to claim it once announced), which resolves the separate grandfathering question from earlier drafts: there is no need for a distinct bonus-credit mechanic for pre-launch users, because being early *is* the mechanic. The cap is enforced server-side at trial-start (card added), not at first billing, to prevent gaming.
 

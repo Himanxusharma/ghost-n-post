@@ -48,7 +48,7 @@ product itself as simply as possible: one repo, one deploy, on Vercel.
 
 ## 5. Scope
 
-### Shipped (Phase 1–4)
+### Shipped (Phase 1–5)
 
 - YouTube URL input → transcript extraction → Groq drafts
 - Platform selection (LinkedIn / X)
@@ -58,13 +58,13 @@ product itself as simply as possible: one repo, one deploy, on Vercel.
 - Publish + schedule to LinkedIn/X
 - History, batch/channel mode, analytics, Chrome extension, teams
 - Multi-language generation (`auto` + explicit locales)
+- Pricing page (`/pricing`), multi-currency support, pre-launch offer (₹299/mo for first 3 months), and live Pro Tier Checkout integration (`/api/billing/checkout`)
 - Responsive Tactile Brutalist UI (verified across Desktop >1024px, Tablet 768px-1024px, Mobile 375px-560px, and Small Mobile <380px)
 - Production Vercel single-project deployment hardened (`npm run build` verified)
 
 ### Future / open
 
 - Deeper LinkedIn analytics (partner-gated today)
-- Pricing / freemium metering
 - Broader video sources beyond YouTube
 
 ## 6. Success Metrics
@@ -104,11 +104,11 @@ product itself as simply as possible: one repo, one deploy, on Vercel.
 - **Phase 2 — shipped:** Direct publishing, scheduling, carousel images
 - **Phase 3 — shipped:** Chrome extension, batch/channel, analytics
 - **Phase 4 — shipped:** Multi-language, team accounts, custom thumbnails
+- **Phase 5 — shipped:** Pricing page, multi-currency rate cards, pre-launch offer, live checkout API
 
 ## 10. Open Questions
 
 - Do we support unlisted/private videos later (requires YouTube OAuth)?
-- Pricing model — freemium credits per video vs. flat subscription?
 - Do we store transcripts long-term, or purge after generation?
 - At what job volume does Inngest leave the free tier (billing only — still
   no extra infra to host)?
