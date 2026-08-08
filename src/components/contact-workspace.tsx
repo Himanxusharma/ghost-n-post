@@ -102,7 +102,7 @@ export function ContactWorkspace() {
             }
           />
 
-          <div className="contact-grid" style={{ marginTop: "1.5rem", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "2rem" }}>
+          <div className="contact-grid" style={{ marginTop: "1.5rem" }}>
             {/* Direct Web3Forms Submission Form */}
             <div className="contact-form-container">
               {status === "success" ? (
