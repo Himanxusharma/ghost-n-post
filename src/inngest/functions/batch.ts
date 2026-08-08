@@ -42,28 +42,43 @@ export const processBatch = inngest.createFunction(
       let channelId: string | null = null;
       let channelTitle: string | null = null;
 
-      if (batch.type === "channel") {
-        const listed = await listChannelVideos(
-          batch.sourceInput,
-          batch.maxVideos,
-        );
-        videos = listed.videos;
-        channelId = listed.channelId;
-        channelTitle = listed.channelTitle;
-      } else {
-        const urls = batch.sourceInput
-          .split("\n")
-          .map((line) => line.trim())
-          .filter(Boolean);
-        for (const url of urls.slice(0, batch.maxVideos)) {
-          const youtubeId = extractYoutubeId(url);
-          if (!youtubeId) continue;
-          videos.push({
-            youtubeId,
-            title: youtubeId,
-            url: `https://www.youtube.com/watch?v=${youtubeId}`,
-          });
+      try {
+        if (batch.type === "channel") {
+          const listed = await listChannelVideos(
+            batch.sourceInput,
+            batch.maxVideos,
+          );
+          videos = listed.videos;
+          channelId = listed.channelId;
+          channelTitle = listed.channelTitle;
+        } else {
+          const urls = batch.sourceInput
+            .split("\n")
+            .map((line) => line.trim())
+            .filter(Boolean);
+          for (const url of urls.slice(0, batch.maxVideos)) {
+            const youtubeId = extractYoutubeId(url);
+            if (!youtubeId) continue;
+            videos.push({
+              youtubeId,
+              title: youtubeId,
+              url: `https://www.youtube.com/watch?v=${youtubeId}`,
+            });
+          }
         }
+      } catch (err) {
+        const errorMsg =
+          err instanceof Error ? err.message : "Failed to resolve channel videos";
+        await db
+          .update(batches)
+          .set({
+            status: "failed",
+            stageLabel: "Failed",
+            errorMessage: errorMsg,
+            updatedAt: new Date(),
+          })
+          .where(eq(batches.id, batchId));
+        throw new Error(errorMsg);
       }
 
       if (videos.length === 0) {

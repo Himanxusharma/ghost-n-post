@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { ThumbImage } from "./thumb-image";
+import { UpgradeModal } from "./upgrade-modal";
 
 type JobProgressProps = {
   stageLabel: string;
@@ -28,6 +30,10 @@ export function JobProgress({
   errorMessage,
   onRetry,
 }: JobProgressProps) {
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const isPlanLimitError = Boolean(
+    errorMessage && /upgrade|free plan|3 minutes/i.test(errorMessage),
+  );
   const activeIndex = STAGES.findIndex((stage) =>
     stageLabel
       .toLowerCase()
@@ -69,11 +75,27 @@ export function JobProgress({
       {status === "failed" ? (
         <div className="progress-error">
           <p>{errorMessage ?? "Generation failed."}</p>
-          {onRetry ? (
-            <button type="button" onClick={onRetry}>
-              Try again
-            </button>
-          ) : null}
+          <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.5rem" }}>
+            {isPlanLimitError ? (
+              <button
+                type="button"
+                className="inline-upgrade-btn"
+                onClick={() => setUpgradeOpen(true)}
+              >
+                ⚡ Upgrade to Pro
+              </button>
+            ) : null}
+            {onRetry ? (
+              <button type="button" onClick={onRetry} className="tool-btn">
+                Try again
+              </button>
+            ) : null}
+          </div>
+          <UpgradeModal
+            isOpen={upgradeOpen}
+            onClose={() => setUpgradeOpen(false)}
+            reason={errorMessage}
+          />
         </div>
       ) : (
         <ol className="stage-list">

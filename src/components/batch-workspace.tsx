@@ -15,6 +15,7 @@ import {
   SUPPORTED_LANGUAGES,
 } from "@/lib/content";
 import { extractYoutubeId } from "@/lib/youtube-id";
+import { UpgradeModal } from "@/components/upgrade-modal";
 
 type BatchRow = {
   id: string;
@@ -48,6 +49,8 @@ export function BatchWorkspace() {
   const router = useRouter();
   const detailId = searchParams.get("id");
   const [styleOpen, setStyleOpen] = useState(false);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [upgradeReason, setUpgradeReason] = useState<string | null>(null);
   const [mode, setMode] = useState<"urls" | "channel">("channel");
   const [channelInput, setChannelInput] = useState("");
   const [urls, setUrls] = useState<string[]>([]);
@@ -408,7 +411,21 @@ export function BatchWorkspace() {
                 </p>
                 <p className="hint">{detailQuery.data.stageLabel}</p>
                 {detailQuery.data.errorMessage ? (
-                  <p className="field-error">{detailQuery.data.errorMessage}</p>
+                  <div>
+                    <p className="field-error">{detailQuery.data.errorMessage}</p>
+                    {/upgrade|free plan|3 minutes/i.test(detailQuery.data.errorMessage) ? (
+                      <button
+                        type="button"
+                        className="inline-upgrade-btn"
+                        onClick={() => {
+                          setUpgradeReason(detailQuery.data?.errorMessage);
+                          setUpgradeOpen(true);
+                        }}
+                      >
+                        ⚡ Upgrade to Pro
+                      </button>
+                    ) : null}
+                  </div>
                 ) : null}
                 {detailQuery.data.status === "queued" ||
                 detailQuery.data.status === "resolving" ||
@@ -446,7 +463,21 @@ export function BatchWorkspace() {
                           {job.status} · {job.stageLabel}
                         </p>
                         {job.errorMessage ? (
-                          <p className="field-error">{job.errorMessage}</p>
+                          <div>
+                            <p className="field-error">{job.errorMessage}</p>
+                            {/upgrade|free plan|3 minutes/i.test(job.errorMessage) ? (
+                              <button
+                                type="button"
+                                className="inline-upgrade-btn"
+                                onClick={() => {
+                                  setUpgradeReason(job.errorMessage);
+                                  setUpgradeOpen(true);
+                                }}
+                              >
+                                ⚡ Upgrade to Pro
+                              </button>
+                            ) : null}
+                          </div>
                         ) : null}
                         {job.postId ? (
                           <Link href={`/?jobId=${job.id}`} className="text-link">
@@ -509,6 +540,11 @@ export function BatchWorkspace() {
           onClose={() => setStyleOpen(false)}
         />
       ) : null}
+      <UpgradeModal
+        isOpen={upgradeOpen}
+        onClose={() => setUpgradeOpen(false)}
+        reason={upgradeReason}
+      />
     </div>
   );
 }

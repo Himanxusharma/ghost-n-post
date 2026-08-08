@@ -284,7 +284,12 @@ export async function listChannelVideos(
 ): Promise<{ channelId: string; channelTitle: string; videos: ChannelVideoSummary[] }> {
   const yt = await getClient();
   const trimmed = channelInput.trim();
+  const cleanHandle = trimmed
+    .replace(/^@/, "")
+    .replace(/^https?:\/\/(www\.)?youtube\.com\/(@|c\/|user\/|channel\/)?/, "");
   let channelId: string | null = null;
+  let channelTitle = "YouTube Channel";
+  const videos: ChannelVideoSummary[] = [];
 
   // Direct channel id
   if (/^UC[\w-]{20,}$/.test(trimmed)) {
@@ -292,67 +297,105 @@ export async function listChannelVideos(
   } else {
     try {
       const url = new URL(
-        trimmed.startsWith("http") ? trimmed : `https://www.youtube.com/${trimmed.replace(/^\/+/, "")}`,
+        trimmed.startsWith("http")
+          ? trimmed
+          : `https://www.youtube.com/${trimmed.replace(/^\/+/, "")}`,
       );
       const parts = url.pathname.split("/").filter(Boolean);
       if (parts[0] === "channel" && parts[1]) {
         channelId = parts[1];
-      } else if (parts[0]?.startsWith("@") || parts[0] === "c" || parts[0] === "user") {
-        const query = parts[0].startsWith("@")
-          ? parts[0]
-          : parts[1]
-            ? `@${parts[1]}`
-            : trimmed;
-        const search = await yt.search(query, { type: "channel" });
-        const first = search.results?.find(
-          (item) => item?.type === "Channel",
-        ) as { id?: string } | undefined;
-        channelId = first?.id ?? null;
       }
     } catch {
-      // fall through to search
+      // ignore URL parsing error
     }
   }
 
-  if (!channelId) {
-    const search = await yt.search(trimmed, { type: "channel" });
-    const first = search.results?.find(
-      (item) => item?.type === "Channel",
-    ) as { id?: string } | undefined;
-    channelId = first?.id ?? null;
+  // Strategy 1: Try getChannel + getVideos()
+  if (channelId || cleanHandle) {
+    try {
+      let targetId = channelId;
+      if (!targetId) {
+        const search = await yt.search(trimmed, { type: "channel" });
+        const first = search.results?.find(
+          (item) => item?.type === "Channel",
+        ) as { id?: string; title?: { toString(): string } } | undefined;
+        targetId = first?.id ?? null;
+        if (first?.title) channelTitle = first.title.toString();
+      }
+
+      if (targetId) {
+        channelId = targetId;
+        const channel = await yt.getChannel(targetId);
+        channelTitle =
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (channel as any)?.metadata?.title ||
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (channel as any)?.header?.title?.toString?.() ||
+          channelTitle;
+
+        try {
+          const videosFeed = await channel.getVideos();
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const items: any[] = videosFeed?.videos ?? [];
+          for (const item of items) {
+            const id = item?.id || item?.video_id;
+            if (!id || typeof id !== "string") continue;
+            videos.push({
+              youtubeId: id,
+              title: item?.title?.toString?.() || item?.title?.text || "Untitled",
+              url: `https://www.youtube.com/watch?v=${id}`,
+            });
+            if (videos.length >= maxVideos) break;
+          }
+        } catch {
+          // getVideos tab failed — fall through to search strategy
+        }
+      }
+    } catch {
+      // getChannel failed — fall through to search strategy
+    }
   }
 
-  if (!channelId) {
-    throw new Error("Could not resolve that YouTube channel");
-  }
-
-  const channel = await yt.getChannel(channelId);
-  const channelTitle =
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (channel as any)?.metadata?.title ||
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (channel as any)?.header?.title?.toString?.() ||
-    "YouTube channel";
-
-  const videosFeed = await channel.getVideos();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const items: any[] = videosFeed?.videos ?? [];
-  const videos: ChannelVideoSummary[] = [];
-
-  for (const item of items) {
-    const id = item?.id || item?.video_id;
-    if (!id || typeof id !== "string") continue;
-    videos.push({
-      youtubeId: id,
-      title: item?.title?.toString?.() || item?.title?.text || "Untitled",
-      url: `https://www.youtube.com/watch?v=${id}`,
-    });
-    if (videos.length >= maxVideos) break;
+  // Strategy 2: Fallback to video search if getVideos yielded no items
+  if (videos.length === 0) {
+    try {
+      const searchRes = await yt.search(trimmed, { type: "video" });
+      const items = searchRes.results ?? [];
+      for (const item of items) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const itemType = (item as any)?.type || (item as any)?.type_name;
+        if (itemType && itemType !== "Video") continue;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const id = (item as any)?.id || (item as any)?.video_id;
+        if (!id || typeof id !== "string" || id.length !== 11) continue;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const authorName = (item as any)?.author?.name || (item as any)?.author?.toString?.();
+        if (authorName && channelTitle === "YouTube Channel") {
+          channelTitle = String(authorName);
+        }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const itemTitle = (item as any)?.title?.toString?.() || (item as any)?.title?.text || "Untitled";
+        videos.push({
+          youtubeId: id,
+          title: String(itemTitle),
+          url: `https://www.youtube.com/watch?v=${id}`,
+        });
+        if (videos.length >= maxVideos) break;
+      }
+    } catch {
+      // ignore search error
+    }
   }
 
   if (videos.length === 0) {
-    throw new Error("No public uploads found for that channel");
+    throw new Error(
+      `Could not find public YouTube videos for "${channelInput}". Please check the channel handle or paste direct video URLs.`,
+    );
   }
 
-  return { channelId, channelTitle: String(channelTitle), videos };
+  return {
+    channelId: channelId || `search-${cleanHandle}`,
+    channelTitle: String(channelTitle),
+    videos,
+  };
 }
