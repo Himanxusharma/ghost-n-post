@@ -63,14 +63,14 @@ export function SiteHeader({ onOpenStyle }: SiteHeaderProps) {
             <Link href="/batch" onClick={closeMenu}>
               Batch
             </Link>
-            <Link href="/analytics" onClick={closeMenu}>
-              Analytics
-            </Link>
             <Link href="/history" onClick={closeMenu}>
               History
             </Link>
-            {/* Scheduled & Connections hidden for V1 — Locked for V2 release */}
+            {/* Analytics, Scheduled & Connections hidden for V1 — Locked for V2 release */}
             {/*
+            <Link href="/analytics" onClick={closeMenu}>
+              Analytics
+            </Link>
             <Link href="/scheduled" onClick={closeMenu}>
               Scheduled
             </Link>

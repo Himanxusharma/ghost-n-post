@@ -94,8 +94,8 @@ fixed bottom nav (not a dense dashboard).
 - Copy-to-clipboard button per generated post / thread part (active for signed-in users).
 - Download option (plain text / markdown, active for signed-in users).
 - Thumbnail download (source + custom quote card when generated).
-- **V2 Feature Lock (Scheduled & Connections)**:
-  - Direct social account connections (`/connections`) and scheduled calendar queue management (`/scheduled`) are locked for **Version 2.0**.
+- **V2 Feature Lock (Analytics, Scheduled & Connections)**:
+  - Analytics (`/analytics`), direct social account connections (`/connections`), and scheduled calendar queue management (`/scheduled`) are locked for **Version 2.0**.
   - All underlying code, database schemas, OAuth endpoints, and API functions are preserved intact for V2.
   - UI navigation links in `SiteHeader` and `PublishPanel` display clean `🔒 V2 FEATURE` notices.
 

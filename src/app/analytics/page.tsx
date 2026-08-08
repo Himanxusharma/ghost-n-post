@@ -82,103 +82,32 @@ export default function AnalyticsPage() {
   return (
     <div className="page-shell">
       <SiteHeader onOpenStyle={() => setStyleOpen(true)} />
+
       <main id="main-content" className="history-page" tabIndex={-1}>
         <div className="page-panel">
           <PageHeader
-            stamp="Analytics"
-            title="Analytics"
-            description="What you generated. What actually landed."
-            backHref="/scheduled"
-            backLabel="Publications →"
-          >
-            <button
-              type="button"
-              className="tool-btn tool-btn-primary"
-              onClick={() => syncMutation.mutate()}
-              disabled={syncMutation.isPending}
-            >
-              {syncMutation.isPending ? "Syncing…" : "Refresh metrics"}
-            </button>
-          </PageHeader>
+            stamp="V2 Feature"
+            title="Analytics dashboard"
+            description="Live engagement tracking and post performance analytics will unlock in Version 2.0."
+            backHref="/"
+            backLabel="← New draft"
+          />
 
-          {analyticsQuery.isLoading ? (
-            <>
-              <AnalyticsSkeleton />
-              <ListSkeleton rows={3} />
-            </>
-          ) : null}
-
-          {summary ? (
-            <div className="analytics-grid">
-              <article>
-                <h2>{summary.completedGenerations}</h2>
-                <p>Drafts generated</p>
-              </article>
-              <article>
-                <h2>{summary.published}</h2>
-                <p>Posts published</p>
-              </article>
-              <article>
-                <h2>{summary.engagement.likes}</h2>
-                <p>Likes (synced)</p>
-              </article>
-              <article>
-                <h2>{summary.engagement.impressions}</h2>
-                <p>Impressions (synced)</p>
-              </article>
+          <div className="v2-lock-card">
+            <span className="v2-badge">🔒 LOCKED FOR V2</span>
+            <h3>Analytics Dashboard Launching in Version 2.0</h3>
+            <p>
+              Live post impressions, engagement sync, and performance analytics will unlock in V2. For now, generate posts in the Studio and use 1-click <strong>Copy</strong> to post directly!
+            </p>
+            <div style={{ marginTop: "1rem" }}>
+              <a href="/" className="tool-btn tool-btn-primary">
+                ← Return to Draft Studio
+              </a>
             </div>
-          ) : null}
-
-          {analyticsQuery.isError ? (
-            <p className="field-error" role="alert">
-              {(analyticsQuery.error as Error).message}
-            </p>
-          ) : null}
-          {syncMutation.isError ? (
-            <p className="field-error" role="alert">
-              {(syncMutation.error as Error).message}
-            </p>
-          ) : null}
-
-          {!analyticsQuery.isLoading ? (
-            <ul className="history-list">
-              {(analyticsQuery.data?.publications ?? []).map((item) => (
-                <li key={item.id} className="publication-row">
-                  <div className="thumb-placeholder platform-badge">
-                    {item.platform === "linkedin" ? "in" : "𝕏"}
-                  </div>
-                  <div className="history-meta">
-                    <h2>{item.videoTitle || item.platform}</h2>
-                    <p>{item.snippet}…</p>
-                    <p className="hint">
-                      {item.metrics.likes} likes · {item.metrics.comments}{" "}
-                      comments · {item.metrics.shares} shares ·{" "}
-                      {item.metrics.impressions} impressions
-                    </p>
-                    {item.externalUrl ? (
-                      <a
-                        href={item.externalUrl}
-                        className="text-link"
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        Open post
-                      </a>
-                    ) : null}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          ) : null}
-
-          {!analyticsQuery.isLoading &&
-          analyticsQuery.data?.publications.length === 0 ? (
-            <p className="hint">
-              No published posts yet. Ship a draft, then refresh the scoreboard.
-            </p>
-          ) : null}
+          </div>
         </div>
       </main>
+
       {styleOpen ? (
         <StyleSettingsModal
           open={styleOpen}
