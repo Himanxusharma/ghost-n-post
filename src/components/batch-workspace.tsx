@@ -409,7 +409,27 @@ export function BatchWorkspace() {
                   {detailQuery.data.channelTitle || detailQuery.data.type} ·{" "}
                   {detailQuery.data.status}
                 </p>
-                <p className="hint">{detailQuery.data.stageLabel}</p>
+                <div className="batch-delivery-bar" style={{ margin: "0.75rem 0 1.25rem" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.4rem" }}>
+                    <span style={{ fontSize: "0.8125rem", fontWeight: 700, color: "var(--accent)" }}>
+                      ⚡ Incremental Delivery: {detailQuery.data.completedCount || 0} of {detailQuery.data.totalCount || detailQuery.data.jobs.length} drafts ready
+                    </span>
+                    <span style={{ fontSize: "0.75rem", fontFamily: "var(--font-mono), monospace", color: "var(--ink-soft)" }}>
+                      {detailQuery.data.totalCount ? Math.round(((detailQuery.data.completedCount || 0) / detailQuery.data.totalCount) * 100) : 0}%
+                    </span>
+                  </div>
+                  <div style={{ height: "6px", background: "#141618", border: "1px solid var(--border)", borderRadius: "3px", overflow: "hidden" }}>
+                    <div
+                      style={{
+                        height: "100%",
+                        background: "var(--accent)",
+                        width: `${detailQuery.data.totalCount ? Math.round(((detailQuery.data.completedCount || 0) / detailQuery.data.totalCount) * 100) : 0}%`,
+                        transition: "width 300ms ease",
+                      }}
+                    />
+                  </div>
+                </div>
+
                 {detailQuery.data.errorMessage ? (
                   <div>
                     <p className="field-error">{detailQuery.data.errorMessage}</p>
@@ -460,7 +480,11 @@ export function BatchWorkspace() {
                       <div className="history-meta">
                         <h2>{job.videoTitle || job.youtubeUrl}</h2>
                         <p>
-                          {job.status} · {job.stageLabel}
+                          {job.status === "complete" ? (
+                            <span style={{ color: "var(--accent)", fontWeight: 700 }}>✓ Draft Ready</span>
+                          ) : (
+                            `${job.status} · ${job.stageLabel}`
+                          )}
                         </p>
                         {job.errorMessage ? (
                           <div>
@@ -480,8 +504,19 @@ export function BatchWorkspace() {
                           </div>
                         ) : null}
                         {job.postId ? (
-                          <Link href={`/?jobId=${job.id}`} className="text-link">
-                            Open draft
+                          <Link
+                            href={`/?jobId=${job.id}`}
+                            className="tool-btn tool-btn-primary"
+                            style={{
+                              display: "inline-flex",
+                              marginTop: "0.5rem",
+                              padding: "0.3rem 0.75rem",
+                              fontSize: "0.75rem",
+                              fontWeight: 700,
+                              textDecoration: "none",
+                            }}
+                          >
+                            ✨ Open draft →
                           </Link>
                         ) : null}
                       </div>
