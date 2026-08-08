@@ -87,6 +87,9 @@ export function SiteHeader({ onOpenStyle }: SiteHeaderProps) {
             <Link href="/pricing" onClick={closeMenu}>
               Pricing
             </Link>
+            <Link href="/contact" onClick={closeMenu}>
+              Contact
+            </Link>
             <button
               type="button"
               className="nav-ghost"
@@ -121,6 +124,11 @@ export function SiteHeader({ onOpenStyle }: SiteHeaderProps) {
                     labelIcon={<MenuDot />}
                     href="/pricing"
                   />
+                  <UserButton.Link
+                    label="Contact"
+                    labelIcon={<MenuDot />}
+                    href="/contact"
+                  />
                 </UserButton.MenuItems>
               </UserButton>
             </div>
@@ -129,6 +137,9 @@ export function SiteHeader({ onOpenStyle }: SiteHeaderProps) {
           <>
             <Link href="/pricing" onClick={closeMenu}>
               Pricing
+            </Link>
+            <Link href="/contact" onClick={closeMenu}>
+              Contact
             </Link>
             <button
               type="button"

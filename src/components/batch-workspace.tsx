@@ -5,6 +5,7 @@ import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PageHeader } from "@/components/page-header";
+import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { StyleSettingsModal } from "@/components/style-settings-modal";
 import { ThumbImage } from "@/components/thumb-image";
@@ -580,6 +581,7 @@ export function BatchWorkspace() {
         onClose={() => setUpgradeOpen(false)}
         reason={upgradeReason}
       />
+      <SiteFooter />
     </div>
   );
 }

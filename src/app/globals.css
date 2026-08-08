@@ -4485,3 +4485,101 @@ select:-webkit-autofill:focus {
   color: var(--ink-soft);
   line-height: 1.4;
 }
+
+/* Site Footer Styling */
+.site-footer {
+  margin-top: 3.5rem;
+  padding: 1.75rem 0 2rem;
+  border-top: 1px solid var(--border);
+  background: var(--paper);
+}
+
+.site-footer-inner {
+  width: min(var(--content-max), calc(100% - (var(--page-pad-x) * 2)));
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+}
+
+.footer-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.footer-brand {
+  font-family: var(--font-display), sans-serif;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+}
+
+.footer-copyright {
+  margin: 0;
+  font-size: 0.775rem;
+  color: var(--ink-soft);
+  font-family: var(--font-mono), monospace;
+}
+
+.footer-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.footer-nav a {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  transition: color 140ms ease;
+}
+
+.footer-nav a:hover {
+  color: var(--accent);
+}
+
+/* Contact Form Input Styling */
+.contact-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.contact-label {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: 0.01em;
+}
+
+.contact-input,
+.contact-textarea {
+  width: 100%;
+  padding: 0.85rem 1.1rem;
+  font-family: var(--font-body), sans-serif;
+  font-size: 0.95rem;
+  color: var(--ink);
+  background: #141618;
+  border: 1.5px solid var(--line);
+  border-radius: 2px;
+  outline: none;
+  transition: border-color 140ms ease, box-shadow 140ms ease, background-color 140ms ease;
+}
+
+.contact-input::placeholder,
+.contact-textarea::placeholder {
+  color: var(--ink-muted);
+  opacity: 0.8;
+}
+
+.contact-input:focus,
+.contact-textarea:focus {
+  border-color: var(--accent);
+  background: #181b1e;
+  box-shadow: 0 0 0 1px var(--accent), 0 4px 12px rgba(232, 255, 71, 0.15);
+}

@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { JobProgress } from "./job-progress";
 import { PostResult } from "./post-result";
+import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "./site-header";
 import { ResultPanelSkeleton } from "./ui-skeleton";
 import { UrlForm } from "./url-form";
@@ -372,6 +373,7 @@ function ActiveJobPanel({
           />
         </div>
       ) : null}
+      <SiteFooter />
     </>
   );
 }

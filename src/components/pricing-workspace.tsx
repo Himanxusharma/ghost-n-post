@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { ContactSalesModal } from "@/components/contact-sales-modal";
 import { PageHeader } from "@/components/page-header";
+import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { StyleSettingsModal } from "@/components/style-settings-modal";
 import { UpgradeModal } from "@/components/upgrade-modal";
@@ -323,6 +324,8 @@ export function PricingWorkspace() {
         isOpen={contactSalesOpen}
         onClose={() => setContactSalesOpen(false)}
       />
+
+      <SiteFooter />
     </div>
   );
 }
