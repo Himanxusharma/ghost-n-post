@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import {
   DEFAULT_FORMAT_ID,
   POST_FORMATS,
@@ -26,6 +27,46 @@ export function FormatPicker({
   compact = false,
   label = "Post format",
 }: FormatPickerProps) {
+  const trackRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+
+    let targetScroll = track.scrollLeft;
+    let animId: number | null = null;
+
+    const smoothScroll = () => {
+      if (!track) return;
+      const current = track.scrollLeft;
+      const diff = targetScroll - current;
+      if (Math.abs(diff) > 0.5) {
+        track.scrollLeft += diff * 0.22;
+        animId = requestAnimationFrame(smoothScroll);
+      } else {
+        track.scrollLeft = targetScroll;
+        animId = null;
+      }
+    };
+
+    const handleWheel = (e: WheelEvent) => {
+      if (e.deltaY !== 0) {
+        e.preventDefault();
+        const maxScroll = track.scrollWidth - track.clientWidth;
+        targetScroll = Math.max(0, Math.min(maxScroll, targetScroll + e.deltaY * 1.25));
+        if (!animId) {
+          animId = requestAnimationFrame(smoothScroll);
+        }
+      }
+    };
+
+    track.addEventListener("wheel", handleWheel, { passive: false });
+    return () => {
+      track.removeEventListener("wheel", handleWheel);
+      if (animId) cancelAnimationFrame(animId);
+    };
+  }, []);
+
   return (
     <fieldset
       className={`format-picker${compact ? " format-picker-compact" : ""}`}
@@ -33,6 +74,7 @@ export function FormatPicker({
     >
       <legend className="field-label">{label}</legend>
       <div
+        ref={trackRef}
         className="format-picker-track"
         role="listbox"
         aria-label={label}
