@@ -100,6 +100,14 @@ export function HomeWorkspace() {
     }
   }, [isLoaded, isSignedIn]);
 
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn || !deepLinkUrl || jobId || formBusy || jobRunning) return;
+    const isAutostart = searchParams.get("autostart") === "true";
+    if (isAutostart && extractYoutubeId(deepLinkUrl)) {
+      void onSubmitUrl(deepLinkUrl, true, "auto", ["linkedin", "x"], "hook-list");
+    }
+  }, [isLoaded, isSignedIn, deepLinkUrl, jobId, formBusy, jobRunning, searchParams]);
+
   function rememberJob(nextJobId: string) {
     setJobId(nextJobId);
     const params = new URLSearchParams(searchParams.toString());

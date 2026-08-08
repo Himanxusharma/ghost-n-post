@@ -1,8 +1,10 @@
 "use client";
 
+import { useAuth } from "@clerk/nextjs";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useState } from "react";
+import { AuthGate } from "@/components/auth-gate";
 import { PageHeader } from "@/components/page-header";
 import { SiteHeader } from "@/components/site-header";
 import { StyleSettingsModal } from "@/components/style-settings-modal";
@@ -18,6 +20,7 @@ type TokenRow = {
 };
 
 export default function ExtensionPage() {
+  const { isSignedIn } = useAuth();
   const [styleOpen, setStyleOpen] = useState(false);
   const [freshToken, setFreshToken] = useState<string | null>(null);
   const queryClient = useQueryClient();
@@ -25,7 +28,7 @@ export default function ExtensionPage() {
   const appUrl =
     typeof window !== "undefined"
       ? window.location.origin
-      : process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+      : process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3010";
 
   const tokensQuery = useQuery({
     queryKey: ["extension-tokens"],
@@ -115,54 +118,75 @@ export default function ExtensionPage() {
             </ol>
           </section>
 
-          {freshToken ? (
-            <div className="token-reveal">
-              <p>Copy this token now. It won&apos;t be shown again.</p>
-              <code>{freshToken}</code>
-            </div>
-          ) : null}
-
-          {createMutation.isError ? (
-            <p className="field-error" role="alert">
-              {(createMutation.error as Error).message}
-            </p>
-          ) : null}
-          {tokensQuery.isLoading ? <ListSkeleton rows={3} /> : null}
-          {tokensQuery.isError ? (
-            <p className="field-error" role="alert">
-              {(tokensQuery.error as Error).message}
-            </p>
-          ) : null}
-
-          {!tokensQuery.isLoading ? (
-            <ul className="history-list">
-              {(tokensQuery.data ?? []).map((token) => (
-                <li key={token.id} className="publication-row">
-                  <div className="thumb-placeholder platform-badge">key</div>
-                  <div className="history-meta">
-                    <h2>{token.name}</h2>
-                    <p className="hint">
-                      {token.tokenPrefix}… · created{" "}
-                      {new Date(token.createdAt).toLocaleString()}
-                    </p>
+          {!isSignedIn ? (
+            <AuthGate
+              title="Sign in required for Chrome Extension"
+              message="Sign in with Google to create and manage your API tokens for the Chrome extension."
+            />
+          ) : (
+            <>
+              {freshToken ? (
+                <div className="token-reveal">
+                  <p>Copy this token now. It won&apos;t be shown again.</p>
+                  <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                    <code>{freshToken}</code>
+                    <button
+                      type="button"
+                      className="tool-btn"
+                      onClick={() => {
+                        navigator.clipboard.writeText(freshToken);
+                        success("Token copied to clipboard!");
+                      }}
+                    >
+                      Copy token
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    className="btn-quiet"
-                    onClick={() => revokeMutation.mutate(token.id)}
-                    disabled={revokeMutation.isPending}
-                  >
-                    Revoke
-                  </button>
-                </li>
-              ))}
-            </ul>
-          ) : null}
-          {!tokensQuery.isLoading && tokensQuery.data?.length === 0 ? (
-            <p className="hint">
-              No active tokens yet. Mint one and plug it into the extension.
-            </p>
-          ) : null}
+                </div>
+              ) : null}
+
+              {createMutation.isError ? (
+                <p className="field-error" role="alert">
+                  {(createMutation.error as Error).message}
+                </p>
+              ) : null}
+              {tokensQuery.isLoading ? <ListSkeleton rows={3} /> : null}
+              {tokensQuery.isError ? (
+                <p className="field-error" role="alert">
+                  {(tokensQuery.error as Error).message}
+                </p>
+              ) : null}
+
+              {!tokensQuery.isLoading ? (
+                <ul className="history-list">
+                  {(tokensQuery.data ?? []).map((token) => (
+                    <li key={token.id} className="publication-row">
+                      <div className="thumb-placeholder platform-badge">key</div>
+                      <div className="history-meta">
+                        <h2>{token.name}</h2>
+                        <p className="hint">
+                          {token.tokenPrefix}… · created{" "}
+                          {new Date(token.createdAt).toLocaleString()}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        className="btn-quiet"
+                        onClick={() => revokeMutation.mutate(token.id)}
+                        disabled={revokeMutation.isPending}
+                      >
+                        Revoke
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+              {!tokensQuery.isLoading && tokensQuery.data?.length === 0 ? (
+                <p className="hint">
+                  No active tokens yet. Mint one and plug it into the extension.
+                </p>
+              ) : null}
+            </>
+          )}
         </div>
       </main>
       {styleOpen ? (

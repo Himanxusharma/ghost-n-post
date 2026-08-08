@@ -2,16 +2,45 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Ghost n Post</title>
     <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
-    <main>
-      <h1>Ghost n Post</h1>
-      <p id="status">Detecting video…</p>
-      <button id="open-app" type="button">Open in app</button>
-      <button id="generate" type="button" class="primary">Generate now</button>
-      <a id="options" href="options.html">Settings</a>
+    <main className="popup-shell">
+      <header className="popup-header">
+        <div className="brand-badge">
+          <img src="icons/icon16.png" width="16" height="16" alt="G" className="brand-icon" />
+          <h1>Ghost n Post</h1>
+        </div>
+        <span className="kicker">STUDIO</span>
+      </header>
+
+      <div className="status-box">
+        <p id="status">Detecting video…</p>
+      </div>
+
+      <div className="popup-actions">
+        <button id="generate" type="button" class="btn-primary">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 2L15 9L22 12L15 15L12 22L9 15L2 12L9 9L12 2Z" fill="currentColor"/>
+          </svg>
+          <span>Generate now</span>
+        </button>
+        <button id="open-app" type="button" class="btn-secondary">
+          Open in studio
+        </button>
+      </div>
+
+      <footer className="popup-footer">
+        <a id="options" href="options.html" target="_blank" className="footer-link">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+          Settings
+        </a>
+      </footer>
     </main>
     <script src="popup.js"></script>
   </body>

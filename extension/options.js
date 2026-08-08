@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const apiToken = document.getElementById("apiToken");
   const status = document.getElementById("status");
   const saved = await chrome.storage.sync.get({
-    apiBaseUrl: "http://localhost:3000",
+    apiBaseUrl: "http://localhost:3010",
     apiToken: "",
   });
   apiBaseUrl.value = saved.apiBaseUrl;

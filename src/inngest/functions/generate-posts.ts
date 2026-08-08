@@ -12,7 +12,7 @@ import {
 } from "@/lib/youtube";
 import { events, inngest } from "../client";
 
-const MAX_FREE_VIDEO_SECONDS = 3 * 60; // 3 minutes = 180 seconds
+const MAX_FREE_VIDEO_SECONDS = 3 * 60 + 10; // 3 min 10s (190s) allowance for 3-minute videos with YouTube end cards
 
 /**
  * Durable multi-step pipeline:

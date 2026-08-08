@@ -39,7 +39,7 @@ export function getAppBaseUrl(): string {
     );
   }
 
-  return "http://localhost:3000";
+  return "http://localhost:3010";
 }
 
 /** Client-safe / build-safe public origin. */
@@ -52,7 +52,7 @@ export function getPublicAppUrl(): string {
     return `https://${vercel.replace(/^https?:\/\//, "")}`;
   }
 
-  return "http://localhost:3000";
+  return "http://localhost:3010";
 }
 
 const REQUIRED_IN_PRODUCTION = [

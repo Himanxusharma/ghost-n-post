@@ -2,37 +2,151 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>Ghost n Post settings</title>
-    <link rel="stylesheet" href="popup.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ghost n Post Settings</title>
     <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0c0d0e;
+        --panel: #141618;
+        --border: #26292d;
+        --text: #f0f2f5;
+        --muted: #8a939e;
+        --accent: #c8eb32;
+        --accent-text: #050504;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
       body {
-        width: auto;
-        max-width: 520px;
+        margin: 0;
+        padding: 24px 16px;
+        min-width: 320px;
+        background: var(--bg);
+        color: var(--text);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        line-height: 1.4;
+      }
+
+      main {
+        max-width: 480px;
         margin: 0 auto;
+        padding: 24px;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
       }
+
+      h1 {
+        margin: 0;
+        font-size: 1.25rem;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        color: var(--text);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      h1 span {
+        font-size: 0.75rem;
+        padding: 2px 6px;
+        background: var(--accent);
+        color: var(--accent-text);
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      p.desc {
+        margin: 0;
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+
       label {
-        display: grid;
+        display: flex;
+        flex-direction: column;
         gap: 6px;
-        font-size: 13px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text);
       }
+
+      label span.hint {
+        font-size: 0.75rem;
+        font-weight: 400;
+        color: var(--muted);
+      }
+
       input {
-        padding: 10px;
-        border: 1px solid #c5d3de;
+        width: 100%;
+        padding: 10px 12px;
+        background: #050504;
+        border: 1px solid var(--border);
+        color: var(--text);
+        font-size: 0.9rem;
+        font-family: ui-monospace, monospace;
+        outline: none;
+        transition: border-color 140ms ease;
+      }
+
+      input:focus {
+        border-color: var(--accent);
+      }
+
+      button {
+        padding: 10px 16px;
+        background: var(--accent);
+        color: var(--accent-text);
+        border: 0;
+        font-weight: 700;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: opacity 140ms ease;
+        align-self: flex-start;
+      }
+
+      button:hover {
+        opacity: 0.9;
+      }
+
+      #status {
+        margin: 0;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--accent);
       }
     </style>
   </head>
   <body>
     <main>
-      <h1>Extension settings</h1>
+      <h1>Ghost n Post <span>Settings</span></h1>
+      <p class="desc">Manage Chrome Extension connection settings.</p>
+
       <label>
-        API base URL
-        <input id="apiBaseUrl" type="url" placeholder="http://localhost:3000" />
-      </label>
-      <label>
-        API token (gnp_…)
+        API Token (Optional)
+        <span class="hint">Minted from your web studio (/extension) for profile overriding.</span>
         <input id="apiToken" type="password" placeholder="gnp_…" />
       </label>
-      <button id="save" class="primary" type="button">Save</button>
+
+      <details style="border: 1px solid var(--border); padding: 10px; margin-top: 4px; background: rgba(0,0,0,0.2);">
+        <summary style="cursor: pointer; font-size: 0.8rem; color: var(--muted); font-weight: 600;">
+          Advanced / Developer Config
+        </summary>
+        <label style="margin-top: 10px;">
+          API Base URL
+          <span class="hint">Used for local development (defaults to active studio URL).</span>
+          <input id="apiBaseUrl" type="url" placeholder="http://localhost:3010" />
+        </label>
+      </details>
+
+      <button id="save" type="button" style="margin-top: 8px;">Save Settings</button>
       <p id="status"></p>
     </main>
     <script src="options.js"></script>

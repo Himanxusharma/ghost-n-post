@@ -14,9 +14,9 @@ function ensureButton() {
   const button = document.createElement("button");
   button.id = "gnp-extension-btn";
   button.type = "button";
-  button.textContent = "Ghost n Post";
+  button.innerHTML = `<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#c8eb32;margin-right:6px;vertical-align:middle;"></span>Ghost n Post`;
   button.style.cssText =
-    "margin-left:8px;padding:8px 12px;border:0;background:#0f7a7a;color:#fff;font-weight:600;cursor:pointer;";
+    "margin-left:8px;padding:8px 14px;border:1px solid #c8eb32;background:#0c0d0e;color:#c8eb32;font-weight:700;font-size:13px;font-family:system-ui,sans-serif;cursor:pointer;border-radius:0;box-shadow:2px 2px 0 #000;transition:all 140ms ease;";
   button.addEventListener("click", () => {
     const url = currentWatchUrl();
     if (!url) return;
