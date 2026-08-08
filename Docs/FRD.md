@@ -42,9 +42,12 @@ fixed bottom nav (not a dense dashboard).
   - When an unauthenticated visitor clicks **Generate**, the system validates the URL, saves pending parameters (`youtubeUrl`, `applyStyle`, `language`, `platforms`, `formatId`) to `sessionStorage`, displays a toast notification ("Sign in required"), and redirects to `/sign-in`.
   - Upon completing 1-click Google OAuth sign-in, the user returns to `/`, and `HomeWorkspace` automatically retrieves the pending parameters from `sessionStorage` and starts the generation pipeline seamlessly without re-pasting.
 
-### FR-2: Video Metadata & Thumbnail Fetch
-- On valid link submit, system fetches: title, channel name, duration,
-  thumbnail image (via `youtubei.js`, no external binary required).
+### FR-2: Video Metadata & 3-Minute Free Duration Guard
+- On valid link submit, system fetches: title, channel name, duration, thumbnail URL.
+- **Free Tier Video Duration Guard**:
+  - Maximum video length for Free tier users is **3 minutes (180 seconds)**.
+  - If a video exceeds 3 minutes, the pipeline stops early in `fetch-metadata` (before calling STT or LLM APIs) and returns a clean, presentable message: *"Free plan supports videos up to 3 minutes max. This video is X min Y sec. Upgrade to Pro for longer video repurposing."*
+- Private or region-locked videos reject early with a clear message.
 - Thumbnail is displayed to the user within the first few seconds, before
   post generation completes (progressive loading) — the metadata step
   completes and updates job status well before transcription/generation do.

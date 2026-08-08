@@ -12,7 +12,7 @@ import {
 } from "@/lib/youtube";
 import { events, inngest } from "../client";
 
-const LONG_VIDEO_SECONDS = 60 * 60;
+const MAX_FREE_VIDEO_SECONDS = 3 * 60; // 3 minutes = 180 seconds
 
 /**
  * Durable multi-step pipeline:
@@ -54,8 +54,14 @@ export const generateVideoPosts = inngest.createFunction(
           );
         }
 
-        if (meta.durationSeconds > LONG_VIDEO_SECONDS) {
-          // Still proceed — the UI warns upfront; this is a soft note.
+        if (meta.durationSeconds > MAX_FREE_VIDEO_SECONDS) {
+          const durationFormatted =
+            meta.durationSeconds > 0
+              ? `${Math.floor(meta.durationSeconds / 60)} min ${meta.durationSeconds % 60} sec`
+              : "longer than 3 minutes";
+          throw new NonRetriableError(
+            `Free plan supports videos up to 3 minutes max. This video is ${durationFormatted}. Upgrade to Pro for longer video repurposing.`,
+          );
         }
 
         const thumbnailBlobUrl = await mirrorRemoteImage(
@@ -234,8 +240,8 @@ export const generateVideoPosts = inngest.createFunction(
 
       return { postId, videoId: metadata.videoId };
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Unexpected pipeline failure";
+      const { sanitizeUserErrorMessage } = await import("@/lib/errors");
+      const message = sanitizeUserErrorMessage(error);
 
       await step.run("mark-failed", async () => {
         await updateJobStage(jobId, "failed", { errorMessage: message });

@@ -70,8 +70,13 @@ are replaced by **Inngest** — durable functions inside the same Next.js deploy
 - **Tier 3 (2nd STT Fallback)**: Deepgram (`nova-3` model) from resolved audio URL.
 - Transcripts are stored in Vercel Blob.
 
-### 2.6 Post generation (LLM)
+### 2.6 Post generation & Map-Reduce Transcript Chunking (LLM)
 - **Groq** (`llama-3.3-70b-versatile` default; `GROQ_MODEL` override).
+- **Map-Reduce Transcript Chunking**:
+  - Transcripts > 12,000 characters are split into ~5,000-character (~5 min) logical chunks via `chunkTranscript`.
+  - **Map Phase**: Each chunk is summarized in parallel (`summarizeChunk`) extracting 3-5 core insights, quotes, and data points.
+  - **Reduce Phase**: Chunk summaries are combined into a high-density Executive Digest (`prepareTranscriptWithMapReduce`) and passed to `generateSocialPosts`.
+  - Guarantees 100% video coverage from start to finish while keeping input tokens strictly under Groq's 12k TPM limits.
 - Generates only selected platforms (`linkedin` / `x`).
 - Style-profile extraction also via Groq; Zod validates structured JSON.
 

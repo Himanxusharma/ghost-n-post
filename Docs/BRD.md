@@ -39,14 +39,21 @@ Core principle guiding every decision below: **we can't make everything paid, bu
 | **Pro** | ₹1999/mo or ₹19,999/yr (list) | 200 | Regular creators, consistent posting cadence |
 | **Custom / Team** | Sales-assisted, unlisted price | Pooled/negotiated | Agencies, multi-seat teams, high-volume or SSO/compliance needs |
 
-### 4.2 Credit Definition & Weighting
+### 4.2 Credit Definition & Duration-Based Weighting
 
-A credit represents one generation run (metadata + transcript + drafts for the selected platform(s), including one regenerate). To protect margin without a single guessed blended cost:
+A credit represents processing unit effort (video duration, transcript length, and Map-Reduce chunks):
 
-- **1 credit** — generation served by existing YouTube captions (near-zero marginal API cost).
-- **2 credits** — generation requiring the Deepgram STT fallback (real, variable API cost).
+- **Base Weighting**: **1 credit per 5-minute chunk** (or ~6,000 characters of transcript).
+- **STT Surcharge**: **+1 additional credit** if the Deepgram STT fallback is required (no YouTube captions available).
 
-This weighting is a **placeholder assumption** — see §7 (Financial Assumptions) — to be validated against real usage data within the first 60 days of paid launch, then adjusted if the caption/fallback ratio differs materially from expectation.
+| Video Duration / Chunk Count | YouTube Captions (Tier 1 & 2) | STT Fallback (Tier 3) |
+|---|---|---|
+| Up to 5 minutes (1 chunk) | 1 credit | 2 credits |
+| 5–10 minutes (2 chunks) | 2 credits | 3 credits |
+| 10–15 minutes (3 chunks) | 3 credits | 4 credits |
+| 15–30 minutes (6 chunks) | 6 credits | 7 credits |
+
+This chunk-based model aligns user credit consumption directly with LLM token usage and processing effort, preserving healthy unit margins across both short clips and long podcasts.
 
 ### 4.3 Custom / Team Trigger
 

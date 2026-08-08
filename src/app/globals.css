@@ -1566,36 +1566,65 @@ mark {
 .format-picker-track {
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: minmax(7.5rem, 8.5rem);
-  gap: 0.55rem;
+  grid-auto-columns: minmax(7.8rem, 8.8rem);
+  gap: 0.65rem;
   overflow-x: auto;
-  padding: 0.15rem 0.1rem 0.45rem;
+  padding: 1.1rem 0.65rem 0.85rem;
+  margin: -0.85rem -0.4rem 0;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
+  scrollbar-color: var(--ink-muted) transparent;
+  contain: layout style;
+}
+
+.format-picker-track::-webkit-scrollbar {
+  height: 5px;
+}
+
+.format-picker-track::-webkit-scrollbar-track {
+  background: var(--paper-2);
+  border-radius: 3px;
+}
+
+.format-picker-track::-webkit-scrollbar-thumb {
+  background: var(--ink-muted);
+  border-radius: 3px;
+}
+
+.format-picker-track::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
 }
 
 .format-card {
   scroll-snap-align: start;
   display: grid;
   gap: 0.4rem;
-  padding: 0.4rem;
+  padding: 0.45rem;
   border: 1px solid var(--ink-soft);
   background: var(--mist);
   color: var(--ink-soft);
   text-align: left;
   min-width: 0;
+  position: relative;
+  transform-origin: center center;
+  backface-visibility: hidden;
+  will-change: transform;
   transition:
-    border-color 120ms steps(2, end),
-    box-shadow 120ms steps(2, end),
-    background 120ms steps(2, end),
-    color 120ms steps(2, end);
+    transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 140ms ease,
+    box-shadow 160ms cubic-bezier(0.16, 1, 0.3, 1),
+    background 140ms ease,
+    color 140ms ease;
 }
 
 .format-card:hover:not(:disabled) {
-  border-color: var(--ink);
+  border-color: var(--accent);
   color: var(--ink);
-  background: #2a2a24;
+  background: #24241f;
+  transform: scale(1.08) translateZ(0);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.65), 3px 3px 0 var(--accent);
+  z-index: 30;
 }
 
 .format-card.selected {
@@ -1622,6 +1651,11 @@ mark {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 240ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.format-card:hover:not(:disabled) .format-card-preview img {
+  transform: scale(1.06);
 }
 
 .format-card-mock {
@@ -1629,34 +1663,40 @@ mark {
   padding: 0.45rem;
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: 0.35rem;
+  gap: 0.4rem;
   align-content: start;
 }
 
 .format-card-mock-avatar {
-  width: 0.7rem;
-  height: 0.7rem;
+  width: 0.75rem;
+  height: 0.75rem;
   border-radius: 0;
   background: var(--ink-muted);
   margin-top: 0.1rem;
+  transition: background 160ms ease;
+}
+
+.format-card:hover:not(:disabled) .format-card-mock-avatar {
+  background: var(--accent);
 }
 
 .format-card-mock-lines {
   display: grid;
-  gap: 0.22rem;
+  gap: 0.25rem;
   min-width: 0;
 }
 
 .format-card-mock-lines span {
   display: block;
   font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 0.42rem;
+  font-size: 0.48rem;
   letter-spacing: 0.02em;
-  line-height: 1.25;
+  line-height: 1.3;
   color: var(--ink-soft);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  transition: color 140ms ease;
 }
 
 .format-card-mock-lines span:first-child {
@@ -1664,20 +1704,34 @@ mark {
   font-weight: 700;
 }
 
+.format-card:hover:not(:disabled) .format-card-mock-lines span {
+  color: #ffffff;
+}
+
+.format-card:hover:not(:disabled) .format-card-mock-lines span:first-child {
+  color: var(--accent);
+}
+
 .format-card-name {
   font-family: var(--font-mono), ui-monospace, monospace;
   font-size: 0.625rem;
   font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: 0.04em;
   line-height: 1.2;
+  transition: color 140ms ease;
+}
+
+.format-card:hover:not(:disabled) .format-card-name {
+  color: var(--accent);
 }
 
 .format-picker-hint {
-  margin: 0;
+  margin: 0.75rem 0 0;
   color: var(--ink-muted);
   font-size: 0.75rem;
   line-height: 1.35;
+  position: relative;
+  z-index: 1;
 }
 
 .format-picker-compact {

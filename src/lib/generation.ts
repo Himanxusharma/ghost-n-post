@@ -17,16 +17,81 @@ const DEFAULT_STYLE =
 
 const X_CHAR_LIMIT = 280;
 
-/** Trim long transcripts so generation stays within context + cost bounds. */
-export function prepareTranscriptForPrompt(transcript: string): string {
-  const maxChars = 48_000;
-  if (transcript.length <= maxChars) {
+/**
+ * Splits long transcripts into ~5,000 character (~5 minute) logical chunks.
+ */
+export function chunkTranscript(
+  transcript: string,
+  chunkSize = 5_000,
+): string[] {
+  if (transcript.length <= chunkSize) return [transcript];
+  const chunks: string[] = [];
+  let start = 0;
+  while (start < transcript.length) {
+    let end = start + chunkSize;
+    if (end < transcript.length) {
+      const breakPos = transcript.lastIndexOf("\n", end);
+      if (breakPos > start + chunkSize * 0.4) {
+        end = breakPos;
+      }
+    }
+    chunks.push(transcript.slice(start, end).trim());
+    start = end;
+  }
+  return chunks;
+}
+
+/**
+ * Map Phase: Summarizes a transcript chunk into 3-5 high-signal takeaway bullets.
+ */
+export async function summarizeChunk(
+  chunkText: string,
+  chunkIndex: number,
+  totalChunks: number,
+): Promise<string> {
+  const prompt = `You are a content extraction assistant. Extract 3-5 core takeaways, key insights, statistics, and main ideas from Part ${chunkIndex + 1} of ${totalChunks} of a video transcript. Be concise and factual.
+
+Transcript Part ${chunkIndex + 1}:
+${chunkText}`;
+
+  try {
+    return await completeText(prompt, 400);
+  } catch {
+    return `Part ${chunkIndex + 1}: ${chunkText.slice(0, 300)}…`;
+  }
+}
+
+/**
+ * Map-Reduce Transcript Preparation:
+ * - Short transcripts (<= 12,000 chars): Passes full transcript directly.
+ * - Long transcripts (> 12,000 chars): Splits into ~5-minute chunks, summarizes each chunk in parallel,
+ *   and combines summaries into a structured, full-coverage video executive digest.
+ */
+export async function prepareTranscriptWithMapReduce(
+  transcript: string,
+): Promise<string> {
+  const maxDirectChars = 12_000;
+  if (transcript.length <= maxDirectChars) {
     return transcript;
   }
-  // Keep opening (hook-rich) + closing (CTA/summary-rich) slices.
-  const head = transcript.slice(0, Math.floor(maxChars * 0.7));
-  const tail = transcript.slice(-Math.floor(maxChars * 0.3));
-  return `${head}\n\n[…middle of transcript omitted for length…]\n\n${tail}`;
+
+  const chunks = chunkTranscript(transcript, 6_000);
+  const activeChunks = chunks.slice(0, 8);
+
+  const summaries = await Promise.all(
+    activeChunks.map((chunk, index) =>
+      summarizeChunk(chunk, index, activeChunks.length),
+    ),
+  );
+
+  const executiveDigest = summaries
+    .map(
+      (summary, index) =>
+        `=== Section ${index + 1} Key Takeaways ===\n${summary}`,
+    )
+    .join("\n\n");
+
+  return `Executive Summary & Key Section Takeaways from full video transcript:\n\n${executiveDigest}`;
 }
 
 /**
@@ -43,7 +108,7 @@ export async function generateSocialPosts(input: {
   formatId?: string | null;
 }): Promise<GeneratedPosts> {
   const style = input.styleProfile?.trim() || DEFAULT_STYLE;
-  const transcript = prepareTranscriptForPrompt(input.transcript);
+  const transcript = await prepareTranscriptWithMapReduce(input.transcript);
   const language =
     input.language && input.language !== "auto" ? input.language : "en";
   const platforms = normalizePlatforms(input.platforms);
