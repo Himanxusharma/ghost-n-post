@@ -8,7 +8,7 @@ export function SiteFooter() {
           <Link href="/" className="footer-brand">
             Ghost n Post
           </Link>
-          <p className="footer-copyright">
+          <p className="footer-copyright" suppressHydrationWarning>
             © {new Date().getFullYear()} Ghost n Post. All rights reserved.
           </p>
         </div>
