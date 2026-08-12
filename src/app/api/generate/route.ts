@@ -54,7 +54,8 @@ export async function POST(request: Request) {
 
     const { youtubeUrl, applyStyle, language, teamId, platforms, formatId } =
       parsed.data;
-    const youtubeId = extractYoutubeId(youtubeUrl)!;
+    const isPrompt = youtubeUrl.startsWith("prompt://");
+    const youtubeId = isPrompt ? "" : extractYoutubeId(youtubeUrl)!;
 
     // Clerk session or extension API token
     const authed = await requireUser(request);

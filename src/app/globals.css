@@ -3724,20 +3724,34 @@ mark {
     --page-pad-top: 1.5rem;
   }
 
+  .url-row {
+    flex-direction: column;
+    border: none;
+    background: transparent;
+    gap: 0.65rem;
+  }
+
   .url-row input {
     height: 3.25rem;
     min-height: 3.25rem;
     padding: 1rem 1.05rem;
-    font-size: 1.0625rem;
+    font-size: 1rem;
+    border: 1px solid var(--line);
+    background: var(--paper-2);
+    border-radius: 4px;
+    width: 100%;
   }
 
   .url-row input::placeholder {
-    font-size: 1rem;
+    font-size: 0.9rem;
   }
 
   .url-row button {
     height: 3.25rem;
     min-height: 3.25rem;
+    width: 100%;
+    border: 1px solid var(--accent);
+    border-radius: 4px !important;
   }
 
   .analytics-grid {

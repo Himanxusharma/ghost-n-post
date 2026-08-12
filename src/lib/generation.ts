@@ -173,8 +173,28 @@ export async function generateSocialPosts(input: {
     `- Only fill platforms requested: ${platforms.join(" + ")}. Leave others as empty string / [].`,
   );
 
-  const parsed = await completeJson(
-    `You are a social ghostwriter. Paraphrase insights from the video. Never copy the transcript verbatim.
+  const isPrompt = input.channelName === "Direct Topic Prompt";
+  const promptBody = isPrompt
+    ? `You are a professional social ghostwriter. Write insightful, engaging social media posts on the topic/context provided below. Do NOT refer to it as a video or transcript.
+
+Topic / Prompt: "${transcript}"
+
+Output language: ${language} (write ALL drafts in this language)
+Platforms to write for: ${platforms.join(", ")}
+Post format: ${format.name} (${format.id as PostFormatId})
+Format intent: ${format.description}
+
+Writing style to match:
+${style}
+
+Return JSON with this shape:
+{
+  ${shapeLines.join(",\n  ")}
+}
+
+Rules:
+${rules.join("\n")}`
+    : `You are a social ghostwriter. Paraphrase insights from the video. Never copy the transcript verbatim.
 
 Video title: ${input.title}
 Channel: ${input.channelName}
@@ -197,7 +217,10 @@ Return JSON with this shape:
 }
 
 Rules:
-${rules.join("\n")}`,
+${rules.join("\n")}`;
+
+  const parsed = await completeJson(
+    promptBody,
     4096,
     { isProUser: input.isProUser },
   );

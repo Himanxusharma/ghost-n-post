@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { FormatPicker } from "@/components/format-picker";
 import { useToast } from "@/components/toast";
+import { useQuery } from "@tanstack/react-query";
 import {
   LANGUAGE_LABELS,
   SUPPORTED_LANGUAGES,
@@ -37,6 +38,7 @@ export function UrlForm({
   const { isSignedIn } = useAuth();
   const router = useRouter();
 
+  const [mode, setMode] = useState<"youtube" | "prompt">("youtube");
   const [url, setUrl] = useState(initialUrl);
   const [error, setError] = useState<string | null>(null);
   const [applyStyle, setApplyStyle] = useState(true);
@@ -47,14 +49,35 @@ export function UrlForm({
   const [submitting, setSubmitting] = useState(false);
   const { success, error: toastError } = useToast();
 
+  const profileQuery = useQuery({
+    queryKey: ["me"],
+    queryFn: async () => {
+      const res = await fetch("/api/me");
+      const json = await res.json();
+      return json.data as { teams?: any[]; activeTeamId?: string | null };
+    },
+    enabled: isSignedIn,
+  });
+
+  const isPro = Boolean(
+    profileQuery.data?.teams && profileQuery.data.teams.length > 0,
+  );
+
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     const trimmed = url.trim();
-    const id = extractYoutubeId(trimmed);
 
-    if (!id) {
-      setError("Enter a valid YouTube video URL");
-      return;
+    if (mode === "youtube") {
+      const id = extractYoutubeId(trimmed);
+      if (!id) {
+        setError("Enter a valid YouTube video URL");
+        return;
+      }
+    } else {
+      if (trimmed.length < 5) {
+        setError("Please enter a topic or context of at least 5 characters");
+        return;
+      }
     }
 
     const platforms: SocialPlatform[] = [
@@ -67,11 +90,13 @@ export function UrlForm({
       return;
     }
 
+    const finalPayloadUrl = mode === "prompt" ? `prompt://${trimmed}` : trimmed;
+
     if (!isSignedIn) {
       sessionStorage.setItem(
         "ghost_pending_generation",
         JSON.stringify({
-          youtubeUrl: trimmed,
+          youtubeUrl: finalPayloadUrl,
           applyStyle,
           language,
           platforms,
@@ -93,8 +118,8 @@ export function UrlForm({
     setError(null);
     setSubmitting(true);
     try {
-      await onSubmitUrl(trimmed, applyStyle, language, platforms, formatId);
-      success("Generation started", "Pulling the video. Writing drafts…");
+      await onSubmitUrl(finalPayloadUrl, applyStyle, language, platforms, formatId);
+      success("Generation started", mode === "prompt" ? "Drafting posts from your topic prompt..." : "Pulling the video. Writing drafts…");
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Something went wrong";
@@ -107,18 +132,73 @@ export function UrlForm({
 
   return (
     <form className="url-form" onSubmit={handleSubmit} noValidate>
+      {/* Mode Switcher Tabs */}
+      <div className="mode-toggle-tabs" style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem" }}>
+        <button
+          type="button"
+          className={`tab-btn ${mode === "youtube" ? "tab-active" : ""}`}
+          style={{
+            padding: "0.5rem 1rem",
+            fontSize: "0.85rem",
+            fontWeight: 700,
+            borderRadius: "4px",
+            background: mode === "youtube" ? "var(--accent)" : "#1c1d1f",
+            color: mode === "youtube" ? "#000" : "var(--foreground)",
+            border: "1px solid var(--border)",
+            cursor: "pointer",
+            transition: "all 0.15s ease"
+          }}
+          onClick={() => {
+            setMode("youtube");
+            setUrl("");
+            setError(null);
+          }}
+        >
+          📺 YouTube Video
+        </button>
+        <button
+          type="button"
+          className={`tab-btn ${mode === "prompt" ? "tab-active" : ""}`}
+          style={{
+            padding: "0.5rem 1rem",
+            fontSize: "0.85rem",
+            fontWeight: 700,
+            borderRadius: "4px",
+            background: mode === "prompt" ? "var(--accent)" : "#1c1d1f",
+            color: mode === "prompt" ? "#000" : "var(--foreground)",
+            border: "1px solid var(--border)",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.35rem",
+            transition: "all 0.15s ease"
+          }}
+          onClick={() => {
+            if (!isPro) {
+              toastError("Pro Feature Only", "Upgrade to a Team Workspace plan to generate posts using custom topics / NLP prompt inputs.");
+              return;
+            }
+            setMode("prompt");
+            setUrl("");
+            setError(null);
+          }}
+        >
+          ✨ Text Prompt <span style={{ fontSize: "0.65rem", padding: "0.15rem 0.35rem", background: "rgba(255,255,255,0.15)", borderRadius: "3px", color: mode === "prompt" ? "#000" : "var(--foreground)" }}>PRO</span>
+        </button>
+      </div>
+
       <label htmlFor="youtube-url" className="field-label">
-        Source URL
+        {mode === "youtube" ? "Source URL" : "Topic or Context"}
       </label>
       <div className="url-row">
         <input
           id="youtube-url"
           name="youtubeUrl"
-          type="url"
-          inputMode="url"
+          type={mode === "youtube" ? "url" : "text"}
+          inputMode={mode === "youtube" ? "url" : "text"}
           autoComplete="off"
           spellCheck={false}
-          placeholder="https://youtube.com/watch?v=…"
+          placeholder={mode === "youtube" ? "https://youtube.com/watch?v=…" : "e.g., I want to write on Entrepreneurship..."}
           value={url}
           disabled={disabled || submitting}
           onChange={(event) => {

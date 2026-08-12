@@ -15,12 +15,16 @@ export const postFormatIdSchema = z
 export const generateRequestSchema = z.object({
   youtubeUrl: z
     .string()
-    .min(1, "YouTube URL is required")
-    .max(500, "URL is too long")
+    .min(1, "YouTube URL or text prompt is required")
+    .max(5000, "Input is too long")
     .transform((value) => value.trim())
-    .refine((value) => extractYoutubeId(value) !== null, {
-      message: "Enter a valid YouTube video URL",
-    }),
+    .refine(
+      (value) =>
+        value.startsWith("prompt://") || extractYoutubeId(value) !== null,
+      {
+        message: "Enter a valid YouTube URL or text prompt",
+      },
+    ),
   applyStyle: z.boolean().optional().default(true),
   formatId: postFormatIdSchema.optional().default(DEFAULT_FORMAT_ID),
   platforms: z

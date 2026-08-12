@@ -46,6 +46,41 @@ export const generateVideoPosts = inngest.createFunction(
     try {
       const metadata = await step.run("fetch-metadata", async () => {
         await updateJobStage(jobId, "fetching");
+
+        const isPrompt = youtubeUrl.startsWith("prompt://");
+        if (isPrompt) {
+          const promptText = youtubeUrl.replace("prompt://", "");
+          const db = getDb();
+          const [inserted] = await db
+            .insert(videos)
+            .values({
+              youtubeId: `prompt_${Date.now()}`,
+              title: promptText.slice(0, 100),
+              channelName: "Direct Topic Prompt",
+              durationSeconds: 0,
+              thumbnailUrl: "https://www.ghostnpost.com/icon.png",
+              thumbnailBlobUrl: "https://www.ghostnpost.com/icon.png",
+            })
+            .returning({ id: videos.id });
+
+          await updateJobStage(jobId, "fetching", {
+            videoId: inserted.id,
+            stageLabel: "Analyzing prompt…",
+          });
+
+          return {
+            youtubeId: `prompt_${Date.now()}`,
+            title: promptText.slice(0, 100),
+            channelName: "Direct Topic Prompt",
+            durationSeconds: 0,
+            thumbnailUrl: "https://www.ghostnpost.com/icon.png",
+            isPrompt: true,
+            promptText,
+            videoId: inserted.id,
+            thumbnailBlobUrl: "https://www.ghostnpost.com/icon.png",
+          };
+        }
+
         const meta = await fetchVideoMetadata(youtubeUrl);
 
         if (meta.isPrivate) {
@@ -57,8 +92,8 @@ export const generateVideoPosts = inngest.createFunction(
         if (meta.durationSeconds > MAX_FREE_VIDEO_SECONDS) {
           const durationFormatted =
             meta.durationSeconds > 0
-              ? `${Math.floor(meta.durationSeconds / 60)} min ${meta.durationSeconds % 60} sec`
-              : "longer than 3 minutes";
+               ? `${Math.floor(meta.durationSeconds / 60)} min ${meta.durationSeconds % 60} sec`
+               : "longer than 3 minutes";
           throw new NonRetriableError(
             `Free plan supports videos up to 3 minutes max. This video is ${durationFormatted}. Upgrade to Pro for longer video repurposing.`,
           );
@@ -111,6 +146,17 @@ export const generateVideoPosts = inngest.createFunction(
       });
 
       const transcript = await step.run("get-transcript", async () => {
+        if ("isPrompt" in metadata && metadata.isPrompt) {
+          await updateJobStage(jobId, "transcribing", {
+            stageLabel: "Structuring prompt...",
+          });
+          return {
+            text: (metadata as any).promptText || "",
+            source: "prompt",
+            transcriptBlobUrl: "",
+          };
+        }
+
         await updateJobStage(jobId, "transcribing");
 
         const captions = await fetchCaptionsTranscript(metadata.youtubeId);
