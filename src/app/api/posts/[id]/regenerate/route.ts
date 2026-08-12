@@ -151,6 +151,7 @@ export async function POST(
       language: post.language,
       platforms: post.platforms ?? ["linkedin", "x"],
       formatId,
+      isProUser: true,
     });
 
     const [updated] = await db

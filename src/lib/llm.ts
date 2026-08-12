@@ -1,11 +1,8 @@
+import { GoogleGenAI } from "@google/genai";
 import Groq from "groq-sdk";
 
-/**
- * Shared Groq client for post generation, style profiles, and slide/thumbnail copy.
- * Groq is OpenAI-compatible; we use chat.completions with optional JSON mode.
- */
-
 const DEFAULT_GROQ_MODEL = "llama-3.3-70b-versatile";
+const DEFAULT_GEMINI_MODEL = "gemini-2.5-flash";
 
 export function getGroqClient(): Groq {
   const apiKey = process.env.GROQ_API_KEY?.trim();
@@ -19,10 +16,48 @@ export function getGroqModel(): string {
   return process.env.GROQ_MODEL?.trim() || DEFAULT_GROQ_MODEL;
 }
 
-/** Plain-text completion (style profiles, free-form analysis). */
-export async function completeText(prompt: string, maxTokens = 1024): Promise<string> {
-  const client = getGroqClient();
-  const completion = await client.chat.completions.create({
+export function getGeminiClient(): GoogleGenAI | null {
+  const apiKey =
+    process.env.GEMINI_API_KEY?.trim() ||
+    process.env.GOOGLE_GENAI_API_KEY?.trim();
+  if (!apiKey) return null;
+  return new GoogleGenAI({ apiKey });
+}
+
+export type LLMOptions = {
+  isProUser?: boolean;
+  preferGemini?: boolean;
+};
+
+/**
+ * Plain-text completion.
+ * Pro Users: Uses Google Gemini 2.5 Flash as primary engine, falling back to Groq.
+ * Free Users: Uses Groq (llama-3.3-70b-versatile).
+ */
+export async function completeText(
+  prompt: string,
+  maxTokens = 1024,
+  options?: LLMOptions,
+): Promise<string> {
+  const isPro = options?.isProUser || options?.preferGemini;
+  const gemini = isPro ? getGeminiClient() : null;
+
+  if (gemini) {
+    try {
+      const response = await gemini.models.generateContent({
+        model: DEFAULT_GEMINI_MODEL,
+        contents: prompt,
+      });
+      const text = response.text?.trim();
+      if (text) return text;
+    } catch (err) {
+      console.warn("[llm] Gemini primary text completion failed; falling back to Groq:", err);
+    }
+  }
+
+  // Fallback / default Groq completion
+  const groq = getGroqClient();
+  const completion = await groq.chat.completions.create({
     model: getGroqModel(),
     messages: [{ role: "user", content: prompt }],
     temperature: 0.6,
@@ -31,18 +66,45 @@ export async function completeText(prompt: string, maxTokens = 1024): Promise<st
 
   const text = completion.choices[0]?.message?.content?.trim();
   if (!text) {
-    throw new Error("Groq returned no text content");
+    throw new Error("LLM returned no text content");
   }
   return text;
 }
 
 /**
- * Ask the model for JSON. Prefer native json_object mode; fall back to
- * extracting a JSON object from fenced / messy text if needed.
+ * JSON completion.
+ * Pro Users: Uses Google Gemini 2.5 Flash (responseMimeType: "application/json") as primary engine, falling back to Groq.
+ * Free Users: Uses Groq (response_format: { type: "json_object" }).
  */
-export async function completeJson(prompt: string, maxTokens = 4096): Promise<unknown> {
-  const client = getGroqClient();
-  const completion = await client.chat.completions.create({
+export async function completeJson(
+  prompt: string,
+  maxTokens = 4096,
+  options?: LLMOptions,
+): Promise<unknown> {
+  const isPro = options?.isProUser || options?.preferGemini;
+  const gemini = isPro ? getGeminiClient() : null;
+
+  if (gemini) {
+    try {
+      const response = await gemini.models.generateContent({
+        model: DEFAULT_GEMINI_MODEL,
+        contents: prompt,
+        config: {
+          responseMimeType: "application/json",
+        },
+      });
+      const text = response.text?.trim();
+      if (text) {
+        return parseJsonObject(text);
+      }
+    } catch (err) {
+      console.warn("[llm] Gemini primary JSON completion failed; falling back to Groq:", err);
+    }
+  }
+
+  // Fallback / default Groq JSON completion
+  const groq = getGroqClient();
+  const completion = await groq.chat.completions.create({
     model: getGroqModel(),
     messages: [
       {
@@ -58,7 +120,7 @@ export async function completeJson(prompt: string, maxTokens = 4096): Promise<un
 
   const text = completion.choices[0]?.message?.content?.trim();
   if (!text) {
-    throw new Error("Groq returned no JSON content");
+    throw new Error("LLM returned no JSON content");
   }
 
   return parseJsonObject(text);

@@ -106,6 +106,7 @@ export async function generateSocialPosts(input: {
   language?: string;
   platforms?: SocialPlatform[];
   formatId?: string | null;
+  isProUser?: boolean;
 }): Promise<GeneratedPosts> {
   const style = input.styleProfile?.trim() || DEFAULT_STYLE;
   const transcript = await prepareTranscriptWithMapReduce(input.transcript);
@@ -198,6 +199,7 @@ Return JSON with this shape:
 Rules:
 ${rules.join("\n")}`,
     4096,
+    { isProUser: input.isProUser },
   );
 
   const result = generatedPostsSchema.parse(parsed);

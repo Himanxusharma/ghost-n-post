@@ -185,6 +185,7 @@ export const generateVideoPosts = inngest.createFunction(
           language: outputLanguage,
           platforms: [...selectedPlatforms],
           formatId: selectedFormatId,
+          isProUser: Boolean(userId),
         });
 
         return {
