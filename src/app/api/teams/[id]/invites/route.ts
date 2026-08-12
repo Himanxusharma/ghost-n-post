@@ -64,6 +64,18 @@ export async function POST(
 
     const acceptUrl = `${getAppBaseUrl()}/team?invite=${invite.token}`;
 
+    // Send invitation email asynchronously
+    const { sendTeamInviteEmail } = await import("@/lib/email");
+    const { getTeamById } = await import("@/lib/teams");
+    const team = await getTeamById(teamId);
+
+    const emailResult = await sendTeamInviteEmail({
+      to: invite.email,
+      inviterName: "Your teammate",
+      teamName: team?.name ?? "Team Workspace",
+      acceptUrl,
+    });
+
     return NextResponse.json(
       {
         success: true,
@@ -74,6 +86,7 @@ export async function POST(
           token: invite.token,
           expiresAt: invite.expiresAt,
           acceptUrl,
+          emailSent: emailResult.sent,
         },
       },
       { status: 201 },

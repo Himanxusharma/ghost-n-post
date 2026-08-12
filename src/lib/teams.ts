@@ -10,6 +10,10 @@ export async function ensureUserRow(
 ) {
   const db = getDb();
   const trimmedName = displayName?.trim() || null;
+  const existing = await db.query.users.findFirst({
+    where: eq(users.id, userId),
+  });
+
   await db
     .insert(users)
     .values({
@@ -24,6 +28,14 @@ export async function ensureUserRow(
         ...(trimmedName ? { displayName: trimmedName } : {}),
       },
     });
+
+  // If new user signup, send welcome email
+  if (!existing && email) {
+    const { sendWelcomeEmail } = await import("@/lib/email");
+    sendWelcomeEmail({ to: email, userName: trimmedName || undefined }).catch(
+      (err) => console.error("[welcome-email] Error sending welcome email:", err),
+    );
+  }
 }
 
 export async function getActiveTeamId(userId: string): Promise<string | null> {
@@ -255,4 +267,11 @@ export async function revokeTeamInvite(inviteId: string, userId: string) {
     .update(teamInvites)
     .set({ status: "revoked" })
     .where(eq(teamInvites.id, inviteId));
+}
+
+export async function getTeamById(teamId: string) {
+  const db = getDb();
+  return db.query.teams.findFirst({
+    where: eq(teams.id, teamId),
+  });
 }

@@ -38,6 +38,7 @@ type TeamDetail = {
     id: string;
     email: string;
     role: string;
+    token?: string;
     expiresAt: string;
   }>;
 };
@@ -47,6 +48,18 @@ export function TeamWorkspace() {
   const [name, setName] = useState("");
   const [language, setLanguage] = useState("auto");
   const [inviteEmail, setInviteEmail] = useState("");
+  const [copiedToken, setCopiedToken] = useState<string | null>(null);
+
+  const handleCopyInvite = async (url: string, id: string = "last") => {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedToken(id);
+      success("Copied to clipboard!", "Team invite link copied to clipboard.");
+      setTimeout(() => setCopiedToken(null), 2500);
+    } catch {
+      toastError("Copy failed", "Please copy the link manually.");
+    }
+  };
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [lastInviteUrl, setLastInviteUrl] = useState<string | null>(null);
@@ -142,7 +155,13 @@ export function TeamWorkspace() {
     },
     onSuccess: (data) => {
       setInviteEmail("");
-      setLastInviteUrl(data.acceptUrl);
+      const cleanUrl = data.acceptUrl.replace(
+        /^https?:\/\/[^/]+/,
+        typeof window !== "undefined" && window.location?.origin
+          ? window.location.origin
+          : "https://www.ghostnpost.com",
+      );
+      setLastInviteUrl(cleanUrl);
       setStatus(`Invite ready for ${data.email}`);
       success("Invite ready", data.email);
       queryClient.invalidateQueries({ queryKey: ["team", activeTeamId] });
@@ -457,36 +476,68 @@ export function TeamWorkspace() {
             ) : null}
 
             {lastInviteUrl ? (
-              <p className="hint">
-                Share this link:{" "}
-                <a href={lastInviteUrl} className="text-link">
-                  {lastInviteUrl}
-                </a>
-              </p>
+              <div className="invite-link-box" style={{ marginTop: "1.25rem", padding: "1rem", background: "#141618", border: "1px solid var(--accent)", borderRadius: "4px" }}>
+                <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--accent)", display: "block", marginBottom: "0.5rem" }}>
+                  ✨ Team Invite Link Ready:
+                </span>
+                <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                  <input
+                    type="text"
+                    readOnly
+                    value={lastInviteUrl}
+                    className="input-text"
+                    style={{ flex: 1, minWidth: "220px", fontFamily: "var(--font-mono), monospace", fontSize: "0.85rem" }}
+                  />
+                  <button
+                    type="button"
+                    className="tool-btn tool-btn-primary"
+                    onClick={() => handleCopyInvite(lastInviteUrl, "last")}
+                  >
+                    {copiedToken === "last" ? "✓ Copied!" : "📋 Copy Link"}
+                  </button>
+                </div>
+              </div>
             ) : null}
 
             {detailQuery.data.invites.length ? (
-              <ul className="connection-list">
-                {detailQuery.data.invites.map((row) => (
-                  <li key={row.id}>
-                    <div>
-                      <h2>{row.email}</h2>
-                      <p>
-                        {row.role} · expires{" "}
-                        {new Date(row.expiresAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                    {canAdmin ? (
-                      <button
-                        type="button"
-                        className="btn-quiet"
-                        onClick={() => revoke.mutate(row.id)}
-                      >
-                        Revoke
-                      </button>
-                    ) : null}
-                  </li>
-                ))}
+              <ul className="connection-list" style={{ marginTop: "1.25rem" }}>
+                {detailQuery.data.invites.map((row) => {
+                  const rowUrl = row.token
+                    ? `${typeof window !== "undefined" && window.location?.origin ? window.location.origin : "https://www.ghostnpost.com"}/team?invite=${row.token}`
+                    : "";
+                  return (
+                    <li key={row.id}>
+                      <div>
+                        <h2>{row.email}</h2>
+                        <p>
+                          {row.role} · expires{" "}
+                          {new Date(row.expiresAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                        {rowUrl ? (
+                          <button
+                            type="button"
+                            className="tool-btn"
+                            style={{ padding: "0.35rem 0.65rem", fontSize: "0.775rem" }}
+                            onClick={() => handleCopyInvite(rowUrl, row.id)}
+                          >
+                            {copiedToken === row.id ? "✓ Copied!" : "📋 Copy Link"}
+                          </button>
+                        ) : null}
+                        {canAdmin ? (
+                          <button
+                            type="button"
+                            className="btn-quiet"
+                            onClick={() => revoke.mutate(row.id)}
+                          >
+                            Revoke
+                          </button>
+                        ) : null}
+                      </div>
+                    </li>
+                  );
+                })}
               </ul>
             ) : null}
           </section>

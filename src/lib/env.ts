@@ -28,15 +28,9 @@ export function getAppBaseUrl(): string {
     return explicit;
   }
 
-  const vercel = process.env.VERCEL_URL?.trim();
-  if (vercel) {
-    return `https://${vercel.replace(/^https?:\/\//, "")}`;
-  }
-
-  if (isProductionRuntime()) {
-    throw new Error(
-      "NEXT_PUBLIC_APP_URL must be set in production (e.g. https://your-domain.com)",
-    );
+  // Default to canonical custom domain for Ghost n Post production / Vercel
+  if (process.env.NODE_ENV === "production" || process.env.VERCEL === "1") {
+    return "https://www.ghostnpost.com";
   }
 
   return "http://localhost:3010";
@@ -47,9 +41,12 @@ export function getPublicAppUrl(): string {
   const explicit = process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/$/, "");
   if (explicit) return explicit;
 
-  const vercel = process.env.VERCEL_URL?.trim();
-  if (vercel) {
-    return `https://${vercel.replace(/^https?:\/\//, "")}`;
+  if (typeof window !== "undefined" && window.location?.origin) {
+    return window.location.origin;
+  }
+
+  if (process.env.NODE_ENV === "production" || process.env.VERCEL === "1") {
+    return "https://www.ghostnpost.com";
   }
 
   return "http://localhost:3010";
